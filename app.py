@@ -229,10 +229,10 @@ menu = st.sidebar.radio(
     label="",
     options=[
         "Особовий склад",
-        "Введення вимірювань",
-        "Річний журнал (Додаток 3)",
-        "Багаторічний облік (2-50 років)",
-        "Гнучкий пошук та аналітика"
+        "Внесення доз",
+        "Журнал обліку доз за рік",
+        "Багаторічний облік доз",
+        "Пошук та аналітика"
     ],
     label_visibility="collapsed"
 )
@@ -240,7 +240,7 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 
-st.sidebar.markdown("Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі нижче:")
+st.sidebar.markdown("Для редагування або видалення даних введіть пароль адміністратора у панелі нижче:")
 admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password")
 
 IS_ADMIN = (admin_password_input == "admin123")
@@ -258,7 +258,7 @@ if menu == "Особовий склад":
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### Додати співробітника")
+        st.markdown("### Додати особу")
         with st.form("add_person_form"):
             name = st.text_input("Прізвище, ім'я та по батькові")
             pos = st.text_input("Посада")
