@@ -107,11 +107,19 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТИЛЮ "ПЛАТФОРМА ХБРЯ" ---
-st.set_page_config(page_title="Платформа ХБРЯ — Система ІДК", layout="wide")
+# --- 3. НАЛАШТУВАННЯ СТИЛЮ ТА ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ ---
+st.set_page_config(page_title="Система ІДК", layout="wide")
 
 cbrn_style = """
 <style>
+    /* Приховування верхнього службового бару та меню Streamlit */
+    header[data-testid="stHeader"] {
+        visibility: hidden !important;
+        height: 0px !important;
+    }
+    #MainMenu {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+
     /* Головний фон та базовий шрифт 17px */
     .stApp {
         background-color: #0E1117;
@@ -138,22 +146,31 @@ cbrn_style = """
         font-weight: bold !important;
     }
 
-    /* Весь текст — жовтий */
+    /* Текст — жовтий */
     p, span, label, div, li, small, .stMarkdown {
         color: #FFE600 !important;
     }
 
-    /* Обрамлення контейнерів, форм та бокової панелі */
+    /* Обрамлення контейнерів та форм */
     div[data-testid="stForm"], 
     div[data-testid="stMetric"],
     div.stDataFrame,
-    div[data-testid="stExpander"],
-    section[data-testid="stSidebar"] {
+    div[data-testid="stExpander"] {
         border: 2px solid #FFE600 !important;
         border-radius: 4px !important;
         padding: 10px !important;
         box-shadow: 0 0 8px rgba(255, 230, 0, 0.2) !important;
         background-color: #12161F !important;
+    }
+
+    /* Відокремлення бокової панелі подвійною жовтою лінією */
+    section[data-testid="stSidebar"] {
+        border-right: 5px double #FFE600 !important;
+        border-top: none !important;
+        border-left: none !important;
+        border-bottom: none !important;
+        background-color: #12161F !important;
+        padding: 15px !important;
     }
 
     /* Поля введення */
@@ -180,7 +197,7 @@ cbrn_style = """
         border: 2px solid #FFE600 !important;
     }
 
-    /* Перемикачі меню бокової панелі */
+    /* Елементи радіокнопок у меню */
     div[role="radiogroup"] label {
         border: 1px solid #FFE600 !important;
         padding: 6px 10px !important;
@@ -195,26 +212,28 @@ st.markdown(cbrn_style, unsafe_allow_html=True)
 
 # --- 4. ГОЛОВНИЙ ЗАГОЛОВОК СИСТЕМИ ---
 st.title("Система обліку індивідуальних доз опромінення (ІДК)")
-st.caption("Платформа ХБРЯ — Автоматизація Журналу ІДК та аналіз накопичених доз за 2–50 років")
+st.caption("Автоматизація Журналу ІДК та аналіз накопичених доз за 2–50 років")
 st.markdown("---")
 
 # --- 5. БОКОВА ПАНЕЛЬ ТА АВТОРИЗАЦІЯ ---
-st.sidebar.title("ПЛАТФОРМА ХБРЯ")
-st.sidebar.caption("СИСТЕМА ОБЛІКУ ІДО ОСОБОВОГО СКЛАДУ")
+st.sidebar.subheader("ПАНЕЛЬ УПРАВЛІННЯ")
 
 menu = st.sidebar.radio(
-    "РЕЖИМ РОБОТИ:",
-    [
+    label="",
+    options=[
         "Особовий склад",
         "Введення вимірювань",
         "Річний журнал (Додаток 3)",
         "Багаторічний облік (2-50 років)",
         "Гнучкий пошук та аналітика"
-    ]
+    ],
+    label_visibility="collapsed"
 )
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
+
+st.sidebar.markdown("Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі нижче:")
 admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password")
 
 IS_ADMIN = (admin_password_input == "admin123")
@@ -224,7 +243,6 @@ if IS_ADMIN:
 else:
     if admin_password_input != "":
         st.sidebar.error("НЕВІРНИЙ ПАРОЛЬ")
-    st.sidebar.info("Режим перегляду та оперативного внесення")
 
 # --- 6. РАЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
 if menu == "Особовий склад":
@@ -280,8 +298,6 @@ if menu == "Особовий склад":
                         delete_person(selected_p_id)
                         st.warning("Особу та всі її вимірювання видалено!")
                         st.rerun()
-        else:
-            st.info("Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі ліворуч.")
 
     st.markdown("---")
     st.markdown("### Повний список зареєстрованого персоналу")
@@ -348,8 +364,6 @@ elif menu == "Введення вимірювань":
                             delete_measurement(selected_m_id)
                             st.warning("Запис вимірювання видалено!")
                             st.rerun()
-            else:
-                st.info("Помилково внесені дози можна відредагувати або видалити після авторизації адміністратора.")
 
     st.markdown("---")
     st.markdown("### Останні внесені вимірювання")
