@@ -105,14 +105,23 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТИЛЮ ---
+# --- 3. НАЛАШТУВАННЯ СТИЛЮ ТА ПРИХОВУВАННЯ ГІТХАБ/ШАПКИ ---
 st.set_page_config(page_title="Система ІДК", layout="wide")
 
 cbrn_style = """
 <style>
-    header[data-testid="stHeader"] {
+    /* Повне приховування верхньої панелі, аватара GitHub та системних елементів */
+    header, 
+    [data-testid="stHeader"], 
+    [data-testid="stToolbar"], 
+    [data-testid="stHeaderActionElements"],
+    [data-testid="stStatusWidget"],
+    a[href*="github.com"] {
         display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
     }
+
     #MainMenu {visibility: hidden !important;}
     footer {visibility: hidden !important;}
 
@@ -227,7 +236,6 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 
-# Функція виходу через callback для уникнення помилки StreamlitWidgetAlreadyInstantiatedError
 def logout_admin():
     st.session_state["admin_pass"] = ""
 
