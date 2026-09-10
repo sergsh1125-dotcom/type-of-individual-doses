@@ -8,7 +8,7 @@ DB_NAME = "radiation_control.db"
 
 def get_connection():
     conn = sqlite3.connect(DB_NAME)
-    conn.execute("PRAGMA foreign_keys = ON;") # Увімкнення каскадного видалення
+    conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
 def init_db():
@@ -107,26 +107,43 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТИЛЮ "ПЛАТФОРМА ХБРЯ" (CSS) ---
+# --- 3. НАЛАШТУВАННЯ СТИЛЮ "ПЛАТФОРМА ХБРЯ" ---
 st.set_page_config(page_title="Платформа ХБРЯ — Система ІДК", layout="wide")
 
 cbrn_style = """
 <style>
-    /* Головний фон та базовий шрифт +2pt (18px) */
+    /* Головний фон та базовий шрифт 17px */
     .stApp {
         background-color: #0E1117;
         color: #FFE600 !important;
-        font-size: 18px !important;
+        font-size: 17px !important;
         font-family: 'Courier New', Courier, monospace !important;
     }
 
-    /* Весь текст — жовтий */
-    p, span, label, h1, h2, h3, h4, h5, h6, div, li, small, .stMarkdown {
+    /* Заголовки */
+    h1 {
+        font-size: 2.2rem !important;
         color: #FFE600 !important;
-        font-size: 1.05em !important;
+        font-weight: bold !important;
+        margin-bottom: 0.2rem !important;
+    }
+    h2 {
+        font-size: 1.5rem !important;
+        color: #FFE600 !important;
+        font-weight: bold !important;
+    }
+    h3 {
+        font-size: 1.2rem !important;
+        color: #FFE600 !important;
+        font-weight: bold !important;
     }
 
-    /* Рамки вікон, форм, контейнерів та бокової панелі */
+    /* Весь текст — жовтий */
+    p, span, label, div, li, small, .stMarkdown {
+        color: #FFE600 !important;
+    }
+
+    /* Обрамлення контейнерів, форм та бокової панелі */
     div[data-testid="stForm"], 
     div[data-testid="stMetric"],
     div.stDataFrame,
@@ -134,26 +151,26 @@ cbrn_style = """
     section[data-testid="stSidebar"] {
         border: 2px solid #FFE600 !important;
         border-radius: 4px !important;
-        padding: 12px !important;
-        box-shadow: 0 0 10px rgba(255, 230, 0, 0.2) !important;
+        padding: 10px !important;
+        box-shadow: 0 0 8px rgba(255, 230, 0, 0.2) !important;
         background-color: #12161F !important;
     }
 
-    /* Стилізація полів введення */
+    /* Поля введення */
     input, select, textarea, div[data-baseweb="select"] {
         border: 1px solid #FFE600 !important;
         color: #FFE600 !important;
         background-color: #1A1F2C !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
     }
 
-    /* Кнопки у стилі командної панелі */
+    /* Кнопки */
     .stButton>button {
         border: 2px solid #FFE600 !important;
         color: #000000 !important;
         background-color: #FFE600 !important;
         font-weight: bold !important;
-        font-size: 18px !important;
+        font-size: 16px !important;
         border-radius: 2px !important;
         width: 100%;
     }
@@ -163,37 +180,43 @@ cbrn_style = """
         border: 2px solid #FFE600 !important;
     }
 
-    /* Вкладки та радіокнопки */
+    /* Перемикачі меню бокової панелі */
     div[role="radiogroup"] label {
-        border: 1px solid #FFE600;
-        padding: 6px 12px;
-        margin-bottom: 5px;
-        border-radius: 3px;
+        border: 1px solid #FFE600 !important;
+        padding: 6px 10px !important;
+        margin-bottom: 4px !important;
+        border-radius: 3px !important;
+        font-size: 15px !important;
+        white-space: normal !important;
     }
 </style>
 """
 st.markdown(cbrn_style, unsafe_allow_html=True)
 
-# --- 4. БОКОВА ПАНЕЛЬ ТА АВТОРИЗАЦІЯ АДМІНІСТРАТОРА ---
-st.sidebar.title("⚠️ ПЛАТФОРМА ХБРЯ")
+# --- 4. ГОЛОВНИЙ ЗАГОЛОВОК СИСТЕМИ ---
+st.title("Система обліку індивідуальних доз опромінення (ІДК)")
+st.caption("Платформа ХБРЯ — Автоматизація Журналу ІДК та аналіз накопичених доз за 2–50 років")
+st.markdown("---")
+
+# --- 5. БОКОВА ПАНЕЛЬ ТА АВТОРИЗАЦІЯ ---
+st.sidebar.title("ПЛАТФОРМА ХБРЯ")
 st.sidebar.caption("СИСТЕМА ОБЛІКУ ІДО ОСОБОВОГО СКЛАДУ")
 
 menu = st.sidebar.radio(
     "РЕЖИМ РОБОТИ:",
     [
-        "👥 Особовий склад",
-        "📝 Введення вимірювань",
-        "📅 Річний журнал (Додаток 3)",
-        "📊 Багаторічний облік (2-50 років)",
-        "🔍 Гнучкий пошук та аналітика"
+        "Особовий склад",
+        "Введення вимірювань",
+        "Річний журнал (Додаток 3)",
+        "Багаторічний облік (2-50 років)",
+        "Гнучкий пошук та аналітика"
     ]
 )
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🔑 АДМІНІСТРУВАННЯ")
+st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password")
 
-# Пароль за замовчуванням: admin123
 IS_ADMIN = (admin_password_input == "admin123")
 
 if IS_ADMIN:
@@ -203,9 +226,9 @@ else:
         st.sidebar.error("НЕВІРНИЙ ПАРОЛЬ")
     st.sidebar.info("Режим перегляду та оперативного внесення")
 
-# --- 5. РАЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
-if menu == "👥 Особовий склад":
-    st.subheader("👥 РЕЄСТР ОСОБОВОГО СКЛАДУ")
+# --- 6. РАЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
+if menu == "Особовий склад":
+    st.subheader("РЕЄСТР ОСОБОВОГО СКЛАДУ")
     
     col1, col2 = st.columns([1, 1])
     
@@ -228,7 +251,7 @@ if menu == "👥 Особовий склад":
                     
     with col2:
         if IS_ADMIN:
-            st.markdown("### 🛠️ Коригування / Видалення (АДМІН)")
+            st.markdown("### Коригування / Видалення (АДМІН)")
             df_persons = get_personnel()
             if not df_persons.empty:
                 person_options = {f"ID: {r['id']} | {r['full_name']}": r['id'] for _, r in df_persons.iterrows()}
@@ -258,7 +281,7 @@ if menu == "👥 Особовий склад":
                         st.warning("Особу та всі її вимірювання видалено!")
                         st.rerun()
         else:
-            st.info("ℹ️ Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі ліворуч.")
+            st.info("Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі ліворуч.")
 
     st.markdown("---")
     st.markdown("### Повний список зареєстрованого персоналу")
@@ -269,9 +292,9 @@ if menu == "👥 Особовий склад":
             'category': 'Категорія', 'start_year': 'Рік початку'
         }), use_container_width=True)
 
-# --- 6. РАЗДІЛ 2: ВВЕДЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ---
-elif menu == "📝 Введення вимірювань":
-    st.subheader("📝 ВНЕСЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ДОЗ")
+# --- 7. РАЗДІЛ 2: ВВЕДЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ---
+elif menu == "Введення вимірювань":
+    st.subheader("ВНЕСЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ДОЗ")
     
     df_persons = get_personnel()
     if df_persons.empty:
@@ -298,7 +321,7 @@ elif menu == "📝 Введення вимірювань":
 
         with col_in2:
             if IS_ADMIN:
-                st.markdown("### 🛠️ Коригувати/Видалити вимірювання (АДМІН)")
+                st.markdown("### Коригувати/Видалити вимірювання (АДМІН)")
                 df_m = get_all_measurements()
                 if not df_m.empty:
                     meas_dict = {f"ID:{r['measurement_id']} | {r['measurement_date']} | {r['full_name']} ({r['dose_msv']} мЗв)": r['measurement_id'] for _, r in df_m.iterrows()}
@@ -326,7 +349,7 @@ elif menu == "📝 Введення вимірювань":
                             st.warning("Запис вимірювання видалено!")
                             st.rerun()
             else:
-                st.info("ℹ️ Помилково внесені дози можна відредагувати або видалити після авторизації адміністратора.")
+                st.info("Помилково внесені дози можна відредагувати або видалити після авторизації адміністратора.")
 
     st.markdown("---")
     st.markdown("### Останні внесені вимірювання")
@@ -337,9 +360,9 @@ elif menu == "📝 Введення вимірювань":
             'full_name': 'ПІБ', 'position': 'Посада', 'dose_msv': 'Доза (мЗв)'
         }), use_container_width=True)
 
-# --- 7. РАЗДІЛ 3: РІЧНИЙ ЖУРНАЛ (ДОДАТОК 3) ---
-elif menu == "📅 Річний журнал (Додаток 3)":
-    st.subheader("📅 ЖУРНАЛ ОБЛІКУ ІНДИВІДУАЛЬНИХ ДОЗ ЗА РІК")
+# --- 8. РАЗДІЛ 3: РІЧНИЙ ЖУРНАЛ (ДОДАТОК 3) ---
+elif menu == "Річний журнал (Додаток 3)":
+    st.subheader("ЖУРНАЛ ОБЛІКУ ІНДИВІДУАЛЬНИХ ДОЗ ЗА РІК")
     
     selected_year = st.selectbox("Оберіть рік звітності", range(datetime.now().year, 1970, -1))
     
@@ -373,7 +396,7 @@ elif menu == "📅 Річний журнал (Додаток 3)":
             
             csv = df_report.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
-                label="💾 ЕКСПОРТУВАТИ ЖУРНАЛ ЗА РІК (CSV)",
+                label="ЕКСПОРТУВАТИ ЖУРНАЛ ЗА РІК (CSV)",
                 data=csv,
                 file_name=f"Journal_IDK_{selected_year}.csv",
                 mime="text/csv"
@@ -381,9 +404,9 @@ elif menu == "📅 Річний журнал (Додаток 3)":
         else:
             st.info(f"За {selected_year} рік дані відсутні.")
 
-# --- 8. РАЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК (2-50 РОКІВ) ---
-elif menu == "📊 Багаторічний облік (2-50 років)":
-    st.subheader("📊 НАКОПИЧЕНІ ДОЗИ ЗА БАГАТОРІЧНИЙ ПЕРІОД (2–50 РОКІВ)")
+# --- 9. РАЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК (2-50 РОКІВ) ---
+elif menu == "Багаторічний облік (2-50 років)":
+    st.subheader("НАКОПИЧЕНІ ДОЗИ ЗА БАГАТОРІЧНИЙ ПЕРІОД (2–50 РОКІВ)")
     
     df_m = get_all_measurements()
     if not df_m.empty:
@@ -398,7 +421,7 @@ elif menu == "📊 Багаторічний облік (2-50 років)":
             end_period = st.number_input("Кінцевий рік", min_value=start_period, max_value=2070, value=max_yr)
             
         period_len = end_period - start_period + 1
-        st.warning(f"⚠️ ОБРАНО ІНТЕРВАЛ СПОСТЕРЕЖЕННЯ: {period_len} РОКІВ ({start_period} – {end_period})")
+        st.warning(f"ОБРАНО ІНТЕРВАЛ СПОСТЕРЕЖЕННЯ: {period_len} РОКІВ ({start_period} – {end_period})")
         
         df_filtered = df_m[(df_m['year_int'] >= start_period) & (df_m['year_int'] <= end_period)]
         
@@ -420,7 +443,7 @@ elif menu == "📊 Багаторічний облік (2-50 років)":
             }), use_container_width=True)
             
             st.markdown("---")
-            st.markdown("### 📈 ДИНАМІКА ОПРОМІНЕННЯ ОСОБИ")
+            st.markdown("### ДИНАМІКА ОПРОМІНЕННЯ ОСОБИ")
             selected_person = st.selectbox("Обрати особу для побудови графіку", multiyear_summary['full_name'].unique())
             
             person_history = df_filtered[df_filtered['full_name'] == selected_person]
@@ -428,9 +451,9 @@ elif menu == "📊 Багаторічний облік (2-50 років)":
             
             st.line_chart(annual_trend.set_index('year_int')['dose_msv'])
 
-# --- 9. РАЗДІЛ 5: ГНУЧКИЙ ПОШУК ТА АНАЛІТИКА ---
-elif menu == "🔍 Гнучкий пошук та аналітика":
-    st.subheader("🔍 ПОШУК ТА ФІЛЬТРАЦІЯ (ПІБ, ТЕРМІН, ДОЗА)")
+# --- 10. РАЗДІЛ 5: ГНУЧКИЙ ПОШУК ТА АНАЛІТИКА ---
+elif menu == "Гнучкий пошук та аналітика":
+    st.subheader("ПОШУК ТА ФІЛЬТРАЦІЯ (ПІБ, ТЕРМІН, ДОЗА)")
     
     df_m = get_all_measurements()
     if not df_m.empty:
