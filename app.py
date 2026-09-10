@@ -227,6 +227,10 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 
+# Функція виходу через callback для уникнення помилки StreamlitWidgetAlreadyInstantiatedError
+def logout_admin():
+    st.session_state["admin_pass"] = ""
+
 if "admin_pass" not in st.session_state:
     st.session_state["admin_pass"] = ""
 
@@ -237,9 +241,7 @@ IS_ADMIN = (st.session_state["admin_pass"] == "admin123")
 
 if IS_ADMIN:
     st.sidebar.success("РЕЖИМ АДМІНІСТРАТОРА АКТИВОВАНО")
-    if st.sidebar.button("ВИЙТИ З РЕЖИМУ АДМІНІСТРАТОРА"):
-        st.session_state["admin_pass"] = ""
-        st.rerun()
+    st.sidebar.button("ВИЙТИ З РЕЖИМУ АДМІНІСТРАТОРА", on_click=logout_admin)
 else:
     if st.session_state["admin_pass"] != "":
         st.sidebar.error("НЕВІРНИЙ ПАРОЛЬ")
