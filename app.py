@@ -219,7 +219,7 @@ cbrn_style = """
 st.markdown(cbrn_style, unsafe_allow_html=True)
 
 # --- 4. ГОЛОВНИЙ ЗАГОЛОВОК СИСТЕМИ ---
-st.title("Система обліку індивідуальних доз опромінення")
+st.title("Система обліку індивідуальних доз опромінення (ІДК)")
 st.markdown("---")
 
 # --- 5. БОКОВА ПАНЕЛЬ ТА АВТОРИЗАЦІЯ ---
@@ -228,11 +228,11 @@ st.sidebar.subheader("ПАНЕЛЬ УПРАВЛІННЯ")
 menu = st.sidebar.radio(
     label="",
     options=[
-        "Перелік осіб",
-        "Внесення доз",
-        "Журнал доз за рік",
-        "Таблиця річних доз",
-        "Пошук та аналітика"
+        "Особовий склад",
+        "Введення вимірювань",
+        "Річний журнал (Додаток 3)",
+        "Багаторічний облік (2-50 років)",
+        "Гнучкий пошук та аналітика"
     ],
     label_visibility="collapsed"
 )
@@ -240,7 +240,7 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 
-st.sidebar.markdown("Для редагування або видалення даних введіть пароль адміністратора у панелі нижче:")
+st.sidebar.markdown("Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі нижче:")
 admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password")
 
 IS_ADMIN = (admin_password_input == "admin123")
@@ -258,13 +258,13 @@ if menu == "Особовий склад":
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### Додати особу")
+        st.markdown("### Додати співробітника")
         with st.form("add_person_form"):
             name = st.text_input("Прізвище, ім'я та по батькові")
             pos = st.text_input("Посада")
             start_yr = st.number_input("Рік початку обліку", min_value=1970, max_value=2050, value=datetime.now().year)
             
-            submit = st.form_submit_button("ЗБЕРЕГТИ ДАНІ ОСОБИ")
+            submit = st.form_submit_button("ЗБЕРЕГТИ ОСОБУ")
             if submit:
                 if name and pos:
                     add_person(name, pos, category='Категорія А', start_year=start_yr)
@@ -293,7 +293,7 @@ if menu == "Особовий склад":
                     with col_btn1:
                         btn_update = st.form_submit_button("ОНОВИТИ ДАНІ")
                     with col_btn2:
-                        btn_delete = st.form_submit_button("ВИДАЛИТИ ДАНІ ОСОБИ")
+                        btn_delete = st.form_submit_button("ВИДАЛИТИ ОСОБУ")
                         
                     if btn_update:
                         update_person(selected_p_id, edit_name, edit_pos, category='Категорія А', start_year=edit_start_yr)
@@ -301,11 +301,11 @@ if menu == "Особовий склад":
                         st.rerun()
                     if btn_delete:
                         delete_person(selected_p_id)
-                        st.warning("Особу та всі її дані видалено!")
+                        st.warning("Особу та всі її вимірювання видалено!")
                         st.rerun()
 
     st.markdown("---")
-    st.markdown("### Жкрнал обліку доз")
+    st.markdown("### Повний список зареєстрованого персоналу")
     df_persons = get_personnel()
     if not df_persons.empty:
         # Відображення таблиці з ліфтом (фіксована висота + скрол) та без колонки категорії
@@ -319,7 +319,7 @@ if menu == "Особовий склад":
 
 # --- 7. РОЗДІЛ 2: ВВЕДЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ---
 elif menu == "Введення вимірювань":
-    st.subheader("ВНЕСЕННЯ ТА КОРИГУВАННЯ ДОЗ")
+    st.subheader("ВНЕСЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ДОЗ")
     
     df_persons = get_personnel()
     if df_persons.empty:
@@ -328,11 +328,11 @@ elif menu == "Введення вимірювань":
         col_in1, col_in2 = st.columns([1, 1])
         
         with col_in1:
-            st.markdown("### Внести нову дозу")
+            st.markdown("### Внести нове вимірювання")
             person_dict = {f"{row['full_name']} ({row['position']})": row['id'] for _, row in df_persons.iterrows()}
             
             with st.form("add_dose_form"):
-                selected_person_str = st.selectbox("Особа", list(person_dict.keys()))
+                selected_person_str = st.selectbox("Співробітник", list(person_dict.keys()))
                 person_id = person_dict[selected_person_str]
                 
                 m_date = st.date_input("Дата вимірювання", value=date.today())
@@ -346,11 +346,11 @@ elif menu == "Введення вимірювань":
 
         with col_in2:
             if IS_ADMIN:
-                st.markdown("### Коригувати/Видалити (АДМІН)")
+                st.markdown("### Коригувати/Видалити вимірювання (АДМІН)")
                 df_m = get_all_measurements()
                 if not df_m.empty:
                     meas_dict = {f"ID:{r['measurement_id']} | {r['measurement_date']} | {r['full_name']} ({r['dose_msv']} мЗв)": r['measurement_id'] for _, r in df_m.iterrows()}
-                    selected_m_str = st.selectbox("Обрати запис дози", list(meas_dict.keys()))
+                    selected_m_str = st.selectbox("Обрати запис вимірювання", list(meas_dict.keys()))
                     selected_m_id = meas_dict[selected_m_str]
                     
                     meas_data = df_m[df_m['measurement_id'] == selected_m_id].iloc[0]
@@ -367,15 +367,15 @@ elif menu == "Введення вимірювань":
                             
                         if btn_m_update:
                             update_measurement(selected_m_id, int(meas_data['person_id']), e_date.strftime("%Y-%m-%d"), e_dose)
-                            st.success("Дозу оновлено!")
+                            st.success("Вимірювання оновлено!")
                             st.rerun()
                         if btn_m_delete:
                             delete_measurement(selected_m_id)
-                            st.warning("Запис дози видалено!")
+                            st.warning("Запис вимірювання видалено!")
                             st.rerun()
 
     st.markdown("---")
-    st.markdown("### Останні внесені дози")
+    st.markdown("### Останні внесені вимірювання")
     df_m = get_all_measurements()
     if not df_m.empty:
         st.dataframe(df_m[['measurement_id', 'measurement_date', 'full_name', 'position', 'dose_msv']].rename(columns={
@@ -384,7 +384,7 @@ elif menu == "Введення вимірювань":
         }), height=300, use_container_width=True)
 
 # --- 8. РОЗДІЛ 3: РІЧНИЙ ЖУРНАЛ (ДОДАТОК 3) ---
-elif menu == "Річний журнал доз":
+elif menu == "Річний журнал (Додаток 3)":
     st.subheader("ЖУРНАЛ ОБЛІКУ ІНДИВІДУАЛЬНИХ ДОЗ ЗА РІК")
     
     selected_year = st.selectbox("Оберіть рік звітності", range(datetime.now().year, 1970, -1))
@@ -419,7 +419,7 @@ elif menu == "Річний журнал доз":
             
             csv = df_report.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
-                label="ЕКСПОРТУВАТИ ЖУРНАЛ ДОЗ ЗА РІК (CSV)",
+                label="ЕКСПОРТУВАТИ ЖУРНАЛ ЗА РІК (CSV)",
                 data=csv,
                 file_name=f"Journal_IDK_{selected_year}.csv",
                 mime="text/csv"
