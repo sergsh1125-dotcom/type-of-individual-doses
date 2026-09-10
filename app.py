@@ -240,23 +240,17 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 
-# Ініціалізація стану пароля
-if "admin_pass" not in st.session_state:
-    st.session_state["admin_pass"] = ""
-
 st.sidebar.markdown("Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі нижче:")
-admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password", key="admin_pass")
+admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password")
 
-IS_ADMIN = (st.session_state["admin_pass"] == "admin123")
+IS_ADMIN = (admin_password_input == "admin123")
 
 if IS_ADMIN:
     st.sidebar.success("РЕЖИМ АДМІНІСТРАТОРА АКТИВОВАНО")
-    if st.sidebar.button("ВИЙТИ З РЕЖИМУ АДМІНІСТРАТОРА"):
-        st.session_state["admin_pass"] = ""
-        st.rerun()
 else:
-    if st.session_state["admin_pass"] != "":
+    if admin_password_input != "":
         st.sidebar.error("НЕВІРНИЙ ПАРОЛЬ")
+
 # --- 6. РОЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
 if menu == "Особовий склад":
     st.subheader("РЕЄСТР ОСОБОВОГО СКЛАДУ")
