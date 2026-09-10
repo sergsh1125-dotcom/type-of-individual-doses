@@ -219,7 +219,7 @@ cbrn_style = """
 st.markdown(cbrn_style, unsafe_allow_html=True)
 
 # --- 4. ГОЛОВНИЙ ЗАГОЛОВОК СИСТЕМИ ---
-st.title("Система обліку індивідуальних доз опромінення (ІДК)")
+st.title(" Облік індивідуальних доз опромінення")
 st.markdown("---")
 
 # --- 5. БОКОВА ПАНЕЛЬ ТА АВТОРИЗАЦІЯ ---
@@ -228,11 +228,11 @@ st.sidebar.subheader("ПАНЕЛЬ УПРАВЛІННЯ")
 menu = st.sidebar.radio(
     label="",
     options=[
-        "Особовий склад",
-        "Введення вимірювань",
-        "Річний журнал (Додаток 3)",
-        "Багаторічний облік (2-50 років)",
-        "Гнучкий пошук та аналітика"
+        "Перелік осіб",
+        "Введення дози",
+        "Журнал обліку доз за 1 рік",
+        "Облік доз за 50 років)",
+        "Пошук за ПІБ або дозою"
     ],
     label_visibility="collapsed"
 )
@@ -240,17 +240,23 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 
-st.sidebar.markdown("Для редагування або видалення кадрових даних введіть пароль адміністратора у панелі нижче:")
-admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password")
+# Ініціалізація стану пароля
+if "admin_pass" not in st.session_state:
+    st.session_state["admin_pass"] = ""
 
-IS_ADMIN = (admin_password_input == "admin123")
+st.sidebar.markdown("Для редагування або видалення даних введіть пароль у панелі нижче:")
+admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password", key="admin_pass")
+
+IS_ADMIN = (st.session_state["admin_pass"] == "admin123")
 
 if IS_ADMIN:
     st.sidebar.success("РЕЖИМ АДМІНІСТРАТОРА АКТИВОВАНО")
+    if st.sidebar.button("ВИЙТИ З РЕЖИМУ АДМІНІСТРАТОРА"):
+        st.session_state["admin_pass"] = ""
+        st.rerun()
 else:
-    if admin_password_input != "":
+    if st.session_state["admin_pass"] != "":
         st.sidebar.error("НЕВІРНИЙ ПАРОЛЬ")
-
 # --- 6. РОЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
 if menu == "Особовий склад":
     st.subheader("РЕЄСТР ОСОБОВОГО СКЛАДУ")
@@ -258,7 +264,7 @@ if menu == "Особовий склад":
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### Додати співробітника")
+        st.markdown("### Додати особу")
         with st.form("add_person_form"):
             name = st.text_input("Прізвище, ім'я та по батькові")
             pos = st.text_input("Посада")
@@ -305,7 +311,7 @@ if menu == "Особовий склад":
                         st.rerun()
 
     st.markdown("---")
-    st.markdown("### Повний список зареєстрованого персоналу")
+    st.markdown("### Облік доз опромінення")
     df_persons = get_personnel()
     if not df_persons.empty:
         # Відображення таблиці з ліфтом (фіксована висота + скрол) та без колонки категорії
@@ -319,7 +325,7 @@ if menu == "Особовий склад":
 
 # --- 7. РОЗДІЛ 2: ВВЕДЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ---
 elif menu == "Введення вимірювань":
-    st.subheader("ВНЕСЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ДОЗ")
+    st.subheader("ВНЕСЕННЯ ТА КОРИГУВАННЯ ДОЗ")
     
     df_persons = get_personnel()
     if df_persons.empty:
@@ -328,11 +334,11 @@ elif menu == "Введення вимірювань":
         col_in1, col_in2 = st.columns([1, 1])
         
         with col_in1:
-            st.markdown("### Внести нове вимірювання")
+            st.markdown("### Внести новий показник дози")
             person_dict = {f"{row['full_name']} ({row['position']})": row['id'] for _, row in df_persons.iterrows()}
             
             with st.form("add_dose_form"):
-                selected_person_str = st.selectbox("Співробітник", list(person_dict.keys()))
+                selected_person_str = st.selectbox("Особа", list(person_dict.keys()))
                 person_id = person_dict[selected_person_str]
                 
                 m_date = st.date_input("Дата вимірювання", value=date.today())
@@ -346,7 +352,7 @@ elif menu == "Введення вимірювань":
 
         with col_in2:
             if IS_ADMIN:
-                st.markdown("### Коригувати/Видалити вимірювання (АДМІН)")
+                st.markdown("### Коригувати/Видалити (АДМІН)")
                 df_m = get_all_measurements()
                 if not df_m.empty:
                     meas_dict = {f"ID:{r['measurement_id']} | {r['measurement_date']} | {r['full_name']} ({r['dose_msv']} мЗв)": r['measurement_id'] for _, r in df_m.iterrows()}
@@ -367,15 +373,15 @@ elif menu == "Введення вимірювань":
                             
                         if btn_m_update:
                             update_measurement(selected_m_id, int(meas_data['person_id']), e_date.strftime("%Y-%m-%d"), e_dose)
-                            st.success("Вимірювання оновлено!")
+                            st.success("Показники дози оновлено!")
                             st.rerun()
                         if btn_m_delete:
                             delete_measurement(selected_m_id)
-                            st.warning("Запис вимірювання видалено!")
+                            st.warning("Запис видалено!")
                             st.rerun()
 
     st.markdown("---")
-    st.markdown("### Останні внесені вимірювання")
+    st.markdown("### Останні внесені показники дози")
     df_m = get_all_measurements()
     if not df_m.empty:
         st.dataframe(df_m[['measurement_id', 'measurement_date', 'full_name', 'position', 'dose_msv']].rename(columns={
@@ -384,7 +390,7 @@ elif menu == "Введення вимірювань":
         }), height=300, use_container_width=True)
 
 # --- 8. РОЗДІЛ 3: РІЧНИЙ ЖУРНАЛ (ДОДАТОК 3) ---
-elif menu == "Річний журнал (Додаток 3)":
+elif menu == "журнал обліку доз за рік":
     st.subheader("ЖУРНАЛ ОБЛІКУ ІНДИВІДУАЛЬНИХ ДОЗ ЗА РІК")
     
     selected_year = st.selectbox("Оберіть рік звітності", range(datetime.now().year, 1970, -1))
@@ -475,7 +481,7 @@ elif menu == "Багаторічний облік (2-50 років)":
             st.line_chart(annual_trend.set_index('year_int')['dose_msv'])
 
 # --- 10. РОЗДІЛ 5: ГНУЧКИЙ ПОШУК ТА АНАЛІТИКА ---
-elif menu == "Гнучкий пошук та аналітика":
+elif menu == "Пошук за ПІБ або дозою":
     st.subheader("ПОШУК ТА ФІЛЬТРАЦІЯ (ПІБ, ТЕРМІН, ДОЗА)")
     
     df_m = get_all_measurements()
