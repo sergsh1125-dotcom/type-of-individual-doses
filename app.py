@@ -19,7 +19,6 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 full_name TEXT NOT NULL,
                 position TEXT NOT NULL,
-                category TEXT DEFAULT 'Категорія А',
                 start_year INTEGER NOT NULL
             )
         ''')
@@ -39,23 +38,23 @@ init_db()
 # --- 2. ФУНКЦІЇ РОБОТИ З ДАНИМИ (CRUD) ---
 def get_personnel():
     with get_connection() as conn:
-        return pd.read_sql("SELECT * FROM personnel ORDER BY full_name", conn)
+        return pd.read_sql("SELECT id, full_name, position, start_year FROM personnel ORDER BY full_name", conn)
 
-def add_person(full_name, position, category='Категорія А', start_year=2026):
+def add_person(full_name, position, start_year=2026):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO personnel (full_name, position, category, start_year) VALUES (?, ?, ?, ?)",
-            (full_name, position, category, start_year)
+            "INSERT INTO personnel (full_name, position, start_year) VALUES (?, ?, ?)",
+            (full_name, position, start_year)
         )
         conn.commit()
 
-def update_person(person_id, full_name, position, category='Категорія А', start_year=2026):
+def update_person(person_id, full_name, position, start_year=2026):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE personnel SET full_name=?, position=?, category=?, start_year=? WHERE id=?",
-            (full_name, position, category, start_year, person_id)
+            "UPDATE personnel SET full_name=?, position=?, start_year=? WHERE id=?",
+            (full_name, position, start_year, person_id)
         )
         conn.commit()
 
@@ -97,7 +96,6 @@ def get_all_measurements():
                 p.id AS person_id,
                 p.full_name,
                 p.position,
-                p.category,
                 m.measurement_date,
                 m.dose_msv,
                 strftime('%Y', m.measurement_date) AS year
@@ -107,19 +105,17 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТИЛЮ (ВІДПОВІДНО ДО СКРІНШОТА) ---
+# --- 3. НАЛАШТУВАННЯ СТИЛЮ ---
 st.set_page_config(page_title="Система ІДК", layout="wide")
 
 cbrn_style = """
 <style>
-    /* Приховування службових шапок та підйому контенту вгору */
     header[data-testid="stHeader"] {
         display: none !important;
     }
     #MainMenu {visibility: hidden !important;}
     footer {visibility: hidden !important;}
 
-    /* Зменшення верхнього відступу для підйому всієї правої частини */
     .block-container {
         padding-top: 0.5rem !important;
         padding-bottom: 1.5rem !important;
@@ -128,20 +124,17 @@ cbrn_style = """
         padding-top: 0.5rem !important;
     }
 
-    /* Загальний стандартний санс-сериф шрифт як на скріншоті */
     .stApp {
         background-color: #0B101D;
         color: #FFE600 !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     }
 
-    /* Заголовки, назви, підписи та тексти панелі управління — ЖОВТІ */
     h1, h2, h3, label, .stMarkdown, p, span {
         color: #FFE600 !important;
         font-weight: bold !important;
     }
 
-    /* Поля введення (віконця): текст БІЛИЙ, окантовка ЖОВТА */
     input, select, textarea, div[data-baseweb="select"] {
         border: 1px solid #FFE600 !important;
         color: #FFFFFF !important;
@@ -153,12 +146,10 @@ cbrn_style = """
         color: #888888 !important;
     }
 
-    /* Текст всередині випадаючих списків та заповнених полів — БІЛИЙ */
     div[data-baseweb="select"] span, div[data-baseweb="select"] input {
         color: #FFFFFF !important;
     }
 
-    /* Віконця, форми та контейнери: окантовка ЖОВТА */
     div[data-testid="stForm"], 
     div[data-testid="stMetric"],
     div[data-testid="stExpander"] {
@@ -168,7 +159,6 @@ cbrn_style = """
         background-color: #0E1422 !important;
     }
 
-    /* Таблиці: окантовка ЖОВТА, текст всередині БІЛИЙ */
     div.stDataFrame {
         border: 2px solid #FFE600 !important;
         border-radius: 4px !important;
@@ -184,13 +174,11 @@ cbrn_style = """
         font-weight: bold !important;
     }
 
-    /* Ліва панель управління з подвійною жовтою лінією */
     section[data-testid="stSidebar"] {
         border-right: 5px double #FFE600 !important;
         background-color: #0E1422 !important;
     }
 
-    /* Кнопки */
     .stButton>button {
         border: 2px solid #FFE600 !important;
         color: #000000 !important;
@@ -206,7 +194,6 @@ cbrn_style = """
         border: 2px solid #FFE600 !important;
     }
 
-    /* Радіо-кнопки меню */
     div[role="radiogroup"] label {
         border: 1px solid #FFE600 !important;
         padding: 6px 10px !important;
@@ -240,15 +227,21 @@ menu = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.subheader("АДМІНІСТРУВАННЯ")
 
-st.sidebar.markdown("Для редагування або видалення даних введіть пароль адміністратора у панелі нижче:")
-admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password")
+if "admin_pass" not in st.session_state:
+    st.session_state["admin_pass"] = ""
 
-IS_ADMIN = (admin_password_input == "admin123")
+st.sidebar.markdown("Для редагування або видалення даних введіть пароль адміністратора у панелі нижче:")
+admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password", key="admin_pass")
+
+IS_ADMIN = (st.session_state["admin_pass"] == "admin123")
 
 if IS_ADMIN:
     st.sidebar.success("РЕЖИМ АДМІНІСТРАТОРА АКТИВОВАНО")
+    if st.sidebar.button("ВИЙТИ З РЕЖИМУ АДМІНІСТРАТОРА"):
+        st.session_state["admin_pass"] = ""
+        st.rerun()
 else:
-    if admin_password_input != "":
+    if st.session_state["admin_pass"] != "":
         st.sidebar.error("НЕВІРНИЙ ПАРОЛЬ")
 
 # --- 6. РОЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
@@ -258,7 +251,7 @@ if menu == "Особовий склад":
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### Додати особу")
+        st.markdown("### Додати співробітника")
         with st.form("add_person_form"):
             name = st.text_input("Прізвище, ім'я та по батькові")
             pos = st.text_input("Посада")
@@ -267,7 +260,7 @@ if menu == "Особовий склад":
             submit = st.form_submit_button("ЗБЕРЕГТИ ОСОБУ")
             if submit:
                 if name and pos:
-                    add_person(name, pos, category='Категорія А', start_year=start_yr)
+                    add_person(name, pos, start_year=start_yr)
                     st.success(f"Запис {name} успішно створено!")
                     st.rerun()
                 else:
@@ -296,7 +289,7 @@ if menu == "Особовий склад":
                         btn_delete = st.form_submit_button("ВИДАЛИТИ ОСОБУ")
                         
                     if btn_update:
-                        update_person(selected_p_id, edit_name, edit_pos, category='Категорія А', start_year=edit_start_yr)
+                        update_person(selected_p_id, edit_name, edit_pos, start_year=edit_start_yr)
                         st.success("Дані особи оновлено!")
                         st.rerun()
                     if btn_delete:
@@ -308,7 +301,6 @@ if menu == "Особовий склад":
     st.markdown("### Повний список зареєстрованого персоналу")
     df_persons = get_personnel()
     if not df_persons.empty:
-        # Відображення таблиці з ліфтом (фіксована висота + скрол) та без колонки категорії
         st.dataframe(
             df_persons[['id', 'full_name', 'position', 'start_year']].rename(columns={
                 'id': 'ID', 'full_name': 'ПІБ', 'position': 'Посада', 'start_year': 'Рік початку'
@@ -317,8 +309,8 @@ if menu == "Особовий склад":
             use_container_width=True
         )
 
-# --- 7. РОЗДІЛ 2: ВВЕДЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ---
-elif menu == "Введення вимірювань":
+# --- 7. РОЗДІЛ 2: ВНЕСЕННЯ ДОЗ ---
+elif menu == "Внесення доз":
     st.subheader("ВНЕСЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ДОЗ")
     
     df_persons = get_personnel()
@@ -383,8 +375,8 @@ elif menu == "Введення вимірювань":
             'full_name': 'ПІБ', 'position': 'Посада', 'dose_msv': 'Доза (мЗв)'
         }), height=300, use_container_width=True)
 
-# --- 8. РОЗДІЛ 3: РІЧНИЙ ЖУРНАЛ (ДОДАТОК 3) ---
-elif menu == "Річний журнал (Додаток 3)":
+# --- 8. РОЗДІЛ 3: ЖУРНАЛ ОБЛІКУ ДОЗ ЗА РІК ---
+elif menu == "Журнал обліку доз за рік":
     st.subheader("ЖУРНАЛ ОБЛІКУ ІНДИВІДУАЛЬНИХ ДОЗ ЗА РІК")
     
     selected_year = st.selectbox("Оберіть рік звітності", range(datetime.now().year, 1970, -1))
@@ -427,8 +419,8 @@ elif menu == "Річний журнал (Додаток 3)":
         else:
             st.info(f"За {selected_year} рік дані відсутні.")
 
-# --- 9. РОЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК (2-50 РОКІВ) ---
-elif menu == "Багаторічний облік (2-50 років)":
+# --- 9. РОЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК ДОЗ ---
+elif menu == "Багаторічний облік доз":
     st.subheader("НАКОПИЧЕНІ ДОЗИ ЗА БАГАТОРІЧНИЙ ПЕРІОД (2–50 РОКІВ)")
     
     df_m = get_all_measurements()
@@ -474,8 +466,8 @@ elif menu == "Багаторічний облік (2-50 років)":
             
             st.line_chart(annual_trend.set_index('year_int')['dose_msv'])
 
-# --- 10. РОЗДІЛ 5: ГНУЧКИЙ ПОШУК ТА АНАЛІТИКА ---
-elif menu == "Гнучкий пошук та аналітика":
+# --- 10. РОЗДІЛ 5: ПОШУК ТА АНАЛІТИКА ---
+elif menu == "Пошук та аналітика":
     st.subheader("ПОШУК ТА ФІЛЬТРАЦІЯ (ПІБ, ТЕРМІН, ДОЗА)")
     
     df_m = get_all_measurements()
