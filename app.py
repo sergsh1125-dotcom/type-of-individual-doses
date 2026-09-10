@@ -41,7 +41,7 @@ def get_personnel():
     with get_connection() as conn:
         return pd.read_sql("SELECT * FROM personnel ORDER BY full_name", conn)
 
-def add_person(full_name, position, category, start_year):
+def add_person(full_name, position, category='Категорія А', start_year=2026):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -50,7 +50,7 @@ def add_person(full_name, position, category, start_year):
         )
         conn.commit()
 
-def update_person(person_id, full_name, position, category, start_year):
+def update_person(person_id, full_name, position, category='Категорія А', start_year=2026):
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -107,78 +107,87 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТИЛЮ ТА ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ ---
+# --- 3. НАЛАШТУВАННЯ СТИЛЮ (ВІДПОВІДНО ДО СКРІНШОТА) ---
 st.set_page_config(page_title="Система ІДК", layout="wide")
 
 cbrn_style = """
 <style>
-    /* Приховування верхнього службового бару та меню Streamlit */
+    /* Приховування службових шапок та підйому контенту вгору */
     header[data-testid="stHeader"] {
-        visibility: hidden !important;
-        height: 0px !important;
+        display: none !important;
     }
     #MainMenu {visibility: hidden !important;}
     footer {visibility: hidden !important;}
 
-    /* Головний фон та базовий шрифт 17px */
+    /* Зменшення верхнього відступу для підйому всієї правої частини */
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+    section[data-testid="stSidebar"] > div {
+        padding-top: 0.5rem !important;
+    }
+
+    /* Загальний стандартний санс-сериф шрифт як на скріншоті */
     .stApp {
-        background-color: #0E1117;
+        background-color: #0B101D;
         color: #FFE600 !important;
-        font-size: 17px !important;
-        font-family: 'Courier New', Courier, monospace !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     }
 
-    /* Заголовки */
-    h1 {
-        font-size: 2.2rem !important;
-        color: #FFE600 !important;
-        font-weight: bold !important;
-        margin-bottom: 0.2rem !important;
-    }
-    h2 {
-        font-size: 1.5rem !important;
-        color: #FFE600 !important;
-        font-weight: bold !important;
-    }
-    h3 {
-        font-size: 1.2rem !important;
+    /* Заголовки, назви, підписи та тексти панелі управління — ЖОВТІ */
+    h1, h2, h3, label, .stMarkdown, p, span {
         color: #FFE600 !important;
         font-weight: bold !important;
     }
 
-    /* Текст — жовтий */
-    p, span, label, div, li, small, .stMarkdown {
-        color: #FFE600 !important;
+    /* Поля введення (віконця): текст БІЛИЙ, окантовка ЖОВТА */
+    input, select, textarea, div[data-baseweb="select"] {
+        border: 1px solid #FFE600 !important;
+        color: #FFFFFF !important;
+        background-color: #121826 !important;
+        font-size: 16px !important;
+        border-radius: 3px !important;
+    }
+    input::placeholder {
+        color: #888888 !important;
     }
 
-    /* Обрамлення контейнерів та форм */
+    /* Текст всередині випадаючих списків та заповнених полів — БІЛИЙ */
+    div[data-baseweb="select"] span, div[data-baseweb="select"] input {
+        color: #FFFFFF !important;
+    }
+
+    /* Віконця, форми та контейнери: окантовка ЖОВТА */
     div[data-testid="stForm"], 
     div[data-testid="stMetric"],
-    div.stDataFrame,
     div[data-testid="stExpander"] {
         border: 2px solid #FFE600 !important;
         border-radius: 4px !important;
-        padding: 10px !important;
-        box-shadow: 0 0 8px rgba(255, 230, 0, 0.2) !important;
-        background-color: #12161F !important;
+        padding: 12px !important;
+        background-color: #0E1422 !important;
     }
 
-    /* Відокремлення бокової панелі подвійною жовтою лінією */
+    /* Таблиці: окантовка ЖОВТА, текст всередині БІЛИЙ */
+    div.stDataFrame {
+        border: 2px solid #FFE600 !important;
+        border-radius: 4px !important;
+        background-color: #0E1422 !important;
+    }
+    div.stDataFrame [data-testid="stTable"] td, 
+    div.stDataFrame [role="gridcell"] {
+        color: #FFFFFF !important;
+        font-weight: normal !important;
+    }
+    div.stDataFrame [role="columnheader"] {
+        color: #FFE600 !important;
+        font-weight: bold !important;
+    }
+
+    /* Ліва панель управління з подвійною жовтою лінією */
     section[data-testid="stSidebar"] {
         border-right: 5px double #FFE600 !important;
-        border-top: none !important;
-        border-left: none !important;
-        border-bottom: none !important;
-        background-color: #12161F !important;
-        padding: 15px !important;
-    }
-
-    /* Поля введення */
-    input, select, textarea, div[data-baseweb="select"] {
-        border: 1px solid #FFE600 !important;
-        color: #FFE600 !important;
-        background-color: #1A1F2C !important;
-        font-size: 16px !important;
+        background-color: #0E1422 !important;
     }
 
     /* Кнопки */
@@ -188,7 +197,7 @@ cbrn_style = """
         background-color: #FFE600 !important;
         font-weight: bold !important;
         font-size: 16px !important;
-        border-radius: 2px !important;
+        border-radius: 3px !important;
         width: 100%;
     }
     .stButton>button:hover {
@@ -197,14 +206,13 @@ cbrn_style = """
         border: 2px solid #FFE600 !important;
     }
 
-    /* Елементи радіокнопок у меню */
+    /* Радіо-кнопки меню */
     div[role="radiogroup"] label {
         border: 1px solid #FFE600 !important;
         padding: 6px 10px !important;
         margin-bottom: 4px !important;
         border-radius: 3px !important;
-        font-size: 15px !important;
-        white-space: normal !important;
+        color: #FFE600 !important;
     }
 </style>
 """
@@ -212,7 +220,6 @@ st.markdown(cbrn_style, unsafe_allow_html=True)
 
 # --- 4. ГОЛОВНИЙ ЗАГОЛОВОК СИСТЕМИ ---
 st.title("Система обліку індивідуальних доз опромінення (ІДК)")
-st.caption("Автоматизація Журналу ІДК та аналіз накопичених доз за 2–50 років")
 st.markdown("---")
 
 # --- 5. БОКОВА ПАНЕЛЬ ТА АВТОРИЗАЦІЯ ---
@@ -244,7 +251,7 @@ else:
     if admin_password_input != "":
         st.sidebar.error("НЕВІРНИЙ ПАРОЛЬ")
 
-# --- 6. РАЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
+# --- 6. РОЗДІЛ 1: ОСОБОВИЙ СКЛАД ---
 if menu == "Особовий склад":
     st.subheader("РЕЄСТР ОСОБОВОГО СКЛАДУ")
     
@@ -255,13 +262,12 @@ if menu == "Особовий склад":
         with st.form("add_person_form"):
             name = st.text_input("Прізвище, ім'я та по батькові")
             pos = st.text_input("Посада")
-            cat = st.selectbox("Категорія опромінюваних", ["Категорія А", "Категорія Б"])
             start_yr = st.number_input("Рік початку обліку", min_value=1970, max_value=2050, value=datetime.now().year)
             
             submit = st.form_submit_button("ЗБЕРЕГТИ ОСОБУ")
             if submit:
                 if name and pos:
-                    add_person(name, pos, cat, start_yr)
+                    add_person(name, pos, category='Категорія А', start_year=start_yr)
                     st.success(f"Запис {name} успішно створено!")
                     st.rerun()
                 else:
@@ -281,7 +287,6 @@ if menu == "Особовий склад":
                 with st.form("edit_person_form"):
                     edit_name = st.text_input("ПІБ", value=person_data['full_name'])
                     edit_pos = st.text_input("Посада", value=person_data['position'])
-                    edit_cat = st.selectbox("Категорія", ["Категорія А", "Категорія Б"], index=0 if person_data['category']=='Категорія А' else 1)
                     edit_start_yr = st.number_input("Рік початку", min_value=1970, max_value=2050, value=int(person_data['start_year']))
                     
                     col_btn1, col_btn2 = st.columns(2)
@@ -291,7 +296,7 @@ if menu == "Особовий склад":
                         btn_delete = st.form_submit_button("ВИДАЛИТИ ОСОБУ")
                         
                     if btn_update:
-                        update_person(selected_p_id, edit_name, edit_pos, edit_cat, edit_start_yr)
+                        update_person(selected_p_id, edit_name, edit_pos, category='Категорія А', start_year=edit_start_yr)
                         st.success("Дані особи оновлено!")
                         st.rerun()
                     if btn_delete:
@@ -303,12 +308,16 @@ if menu == "Особовий склад":
     st.markdown("### Повний список зареєстрованого персоналу")
     df_persons = get_personnel()
     if not df_persons.empty:
-        st.dataframe(df_persons.rename(columns={
-            'id': 'ID', 'full_name': 'ПІБ', 'position': 'Посада', 
-            'category': 'Категорія', 'start_year': 'Рік початку'
-        }), use_container_width=True)
+        # Відображення таблиці з ліфтом (фіксована висота + скрол) та без колонки категорії
+        st.dataframe(
+            df_persons[['id', 'full_name', 'position', 'start_year']].rename(columns={
+                'id': 'ID', 'full_name': 'ПІБ', 'position': 'Посада', 'start_year': 'Рік початку'
+            }), 
+            height=320, 
+            use_container_width=True
+        )
 
-# --- 7. РАЗДІЛ 2: ВВЕДЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ---
+# --- 7. РОЗДІЛ 2: ВВЕДЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ---
 elif menu == "Введення вимірювань":
     st.subheader("ВНЕСЕННЯ ТА КОРИГУВАННЯ ВИМІРЮВАНЬ ДОЗ")
     
@@ -372,9 +381,9 @@ elif menu == "Введення вимірювань":
         st.dataframe(df_m[['measurement_id', 'measurement_date', 'full_name', 'position', 'dose_msv']].rename(columns={
             'measurement_id': 'ID запису', 'measurement_date': 'Дата', 
             'full_name': 'ПІБ', 'position': 'Посада', 'dose_msv': 'Доза (мЗв)'
-        }), use_container_width=True)
+        }), height=300, use_container_width=True)
 
-# --- 8. РАЗДІЛ 3: РІЧНИЙ ЖУРНАЛ (ДОДАТОК 3) ---
+# --- 8. РОЗДІЛ 3: РІЧНИЙ ЖУРНАЛ (ДОДАТОК 3) ---
 elif menu == "Річний журнал (Додаток 3)":
     st.subheader("ЖУРНАЛ ОБЛІКУ ІНДИВІДУАЛЬНИХ ДОЗ ЗА РІК")
     
@@ -406,7 +415,7 @@ elif menu == "Річний журнал (Додаток 3)":
                 idx += 1
             
             df_report = pd.DataFrame(summary_records)
-            st.dataframe(df_report, use_container_width=True)
+            st.dataframe(df_report, height=350, use_container_width=True)
             
             csv = df_report.to_csv(index=False).encode('utf-8-sig')
             st.download_button(
@@ -418,7 +427,7 @@ elif menu == "Річний журнал (Додаток 3)":
         else:
             st.info(f"За {selected_year} рік дані відсутні.")
 
-# --- 9. РАЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК (2-50 РОКІВ) ---
+# --- 9. РОЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК (2-50 РОКІВ) ---
 elif menu == "Багаторічний облік (2-50 років)":
     st.subheader("НАКОПИЧЕНІ ДОЗИ ЗА БАГАТОРІЧНИЙ ПЕРІОД (2–50 РОКІВ)")
     
@@ -440,7 +449,7 @@ elif menu == "Багаторічний облік (2-50 років)":
         df_filtered = df_m[(df_m['year_int'] >= start_period) & (df_m['year_int'] <= end_period)]
         
         if not df_filtered.empty:
-            multiyear_summary = df_filtered.groupby(['person_id', 'full_name', 'position', 'category']).agg(
+            multiyear_summary = df_filtered.groupby(['person_id', 'full_name', 'position']).agg(
                 total_accumulated_dose=('dose_msv', 'sum'),
                 avg_annual_dose=('dose_msv', lambda x: x.sum() / period_len),
                 max_single_dose=('dose_msv', 'max')
@@ -450,11 +459,11 @@ elif menu == "Багаторічний облік (2-50 років)":
             multiyear_summary['avg_annual_dose'] = multiyear_summary['avg_annual_dose'].round(3)
             
             st.dataframe(multiyear_summary.rename(columns={
-                'full_name': 'ПІБ', 'position': 'Посада', 'category': 'Категорія',
+                'full_name': 'ПІБ', 'position': 'Посада',
                 'total_accumulated_dose': f'Накопичено за {period_len} р. (мЗв)',
                 'avg_annual_dose': 'Середньорічна (мЗв)',
                 'max_single_dose': 'Макс. разова (мЗв)'
-            }), use_container_width=True)
+            }), height=300, use_container_width=True)
             
             st.markdown("---")
             st.markdown("### ДИНАМІКА ОПРОМІНЕННЯ ОСОБИ")
@@ -465,7 +474,7 @@ elif menu == "Багаторічний облік (2-50 років)":
             
             st.line_chart(annual_trend.set_index('year_int')['dose_msv'])
 
-# --- 10. РАЗДІЛ 5: ГНУЧКИЙ ПОШУК ТА АНАЛІТИКА ---
+# --- 10. РОЗДІЛ 5: ГНУЧКИЙ ПОШУК ТА АНАЛІТИКА ---
 elif menu == "Гнучкий пошук та аналітика":
     st.subheader("ПОШУК ТА ФІЛЬТРАЦІЯ (ПІБ, ТЕРМІН, ДОЗА)")
     
@@ -499,4 +508,4 @@ elif menu == "Гнучкий пошук та аналітика":
         st.dataframe(filtered_df[['measurement_date', 'full_name', 'position', 'dose_msv']].rename(columns={
             'measurement_date': 'Дата', 'full_name': 'ПІБ', 
             'position': 'Посада', 'dose_msv': 'Доза (мЗв)'
-        }), use_container_width=True)
+        }), height=350, use_container_width=True)
