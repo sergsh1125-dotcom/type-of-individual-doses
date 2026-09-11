@@ -115,11 +115,15 @@ def get_all_measurements():
         return pd.read_sql(query, conn)
 
 # --- 3. НАЛАШТУВАННЯ СТИЛЮ ТА АДАПТИВНОСТІ МЕНЮ ---
-st.set_page_config(page_title="Система ІДК", layout="wide")
+st.set_page_config(
+    page_title="Система ІДК", 
+    layout="wide",
+    initial_sidebar_state="expanded"  # Примусово розгортати панель при відкритті
+)
 
 cbrn_style = """
 <style>
-    /* 1. ПРИХОВУВАННЯ ТІЛЬКИ МЕНЮ ТА АВАТАРА GITHUB (БЕЗ БЛОКУВАННЯ КНОПКИ БОКОВОГО МЕНЮ НА МОБІЛЬНИХ) */
+    /* 1. ПРИХОВУВАННЯ ТІЛЬКИ МЕНЮ ТА ТУЛБАРУ (БЕЗ БЛОКУВАННЯ КНОПОК БОКОВОГО МЕНЮ) */
     [data-testid="stToolbar"], 
     [data-testid="stHeaderActionElements"],
     [data-testid="stStatusWidget"],
@@ -131,21 +135,61 @@ cbrn_style = """
         visibility: hidden !important;
     }
 
-    /* Прозора шапка з підтримкою кнопки відкриття меню для смартфонів */
+    /* Прозора шапка з високим z-index */
     [data-testid="stHeader"] {
         background-color: transparent !important;
-        z-index: 99999 !important;
+        z-index: 999999 !important;
     }
 
-    /* Підсвічування кнопки розгортання бокової панелі на смартфонах */
-    [data-testid="stSidebarCollapseButton"] button, 
-    [data-testid="stHeader"] button {
+    /* 2. ЯВНА КНОПКА РОЗГОРТАННЯ ПАНЕЛІ КОЛИ ВОНА ЗГОРНУТА (НА ПК ТА СМАРТФОНАХ) */
+    [data-testid="collapsedControl"],
+    div[data-testid="collapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 9999999 !important;
+        background-color: #121826 !important;
+        border: 2px solid #FFE600 !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
+        cursor: pointer !important;
+    }
+
+    [data-testid="collapsedControl"] button,
+    [data-testid="collapsedControl"] span,
+    [data-testid="collapsedControl"] svg {
+        color: #FFE600 !important;
+        fill: #FFE600 !important;
+        stroke: #FFE600 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* 3. КНОПКА ЗГОРТАННЯ ВСЕРЕДИНІ БОКОВОЇ ПАНЕЛІ */
+    [data-testid="stSidebarCollapseButton"],
+    section[data-testid="stSidebar"] button {
         color: #FFE600 !important;
         fill: #FFE600 !important;
     }
+    
+    [data-testid="stSidebarCollapseButton"] svg,
+    section[data-testid="stSidebar"] button svg {
+        color: #FFE600 !important;
+        fill: #FFE600 !important;
+        stroke: #FFE600 !important;
+    }
+
+    /* 4. БОКОВА ПАНЕЛЬ */
+    section[data-testid="stSidebar"] {
+        border-right: 5px double #FFE600 !important;
+        background-color: #0E1422 !important;
+    }
 
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 2rem !important;
         padding-bottom: 1.5rem !important;
     }
     section[data-testid="stSidebar"] > div {
@@ -206,12 +250,7 @@ cbrn_style = """
         font-weight: bold !important;
     }
 
-    section[data-testid="stSidebar"] {
-        border-right: 5px double #FFE600 !important;
-        background-color: #0E1422 !important;
-    }
-
-    /* 2. ТОЧНА СТИЛІЗАЦІЯ УСІХ КНОПОК (ВКЛЮЧАЮЧИ КНОПКИ У ФОРМАХ st.form_submit_button) */
+    /* Стилізація кнопок */
     .stButton > button, 
     div[data-testid="stFormSubmitButton"] > button,
     button[kind="secondaryFormSubmit"],
