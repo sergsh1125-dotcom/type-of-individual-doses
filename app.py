@@ -123,7 +123,7 @@ st.set_page_config(
 
 cbrn_style = """
 <style>
-    /* 1. ПРИХОВУЄМО МЕНЮ STREAMLIT ТА ФУТЕР */
+    /* 1. ПРИХОВУЄМО СТАНДАРТНЕ МЕНЮ STREAMLIT */
     #MainMenu, 
     footer, 
     [data-testid="stDecoration"], 
@@ -132,57 +132,65 @@ cbrn_style = """
         visibility: hidden !important;
     }
 
-    /* 2. ЧЕРВОНА КНОПКА ТА СТРІЛКА РОЗГОРТАННЯ/ЗГОРТАННЯ ПАНЕЛІ (ДЛЯ ПК ТА СМАРТФОНІВ) */
+    /* ФІКС ШАПКИ ДЛЯ МОБІЛЬНИХ: Темний фон замість білого */
+    header[data-testid="stHeader"] {
+        background-color: #0B101D !important;
+        z-index: 99999 !important;
+    }
+
+    /* 2. КНОПКА ТА СТРІЛКА РОЗГОРТАННЯ/ЗГОРТАННЯ ПАНЕЛІ (У ЧЕРВОНОМУ КВАДРАТІ) */
     [data-testid="stSidebarToggle"], 
     [data-testid="collapsedControl"],
-    button[data-testid="baseButton-header"],
-    [data-testid="stSidebarCollapseButton"] {
+    [data-testid="stSidebarCollapseButton"],
+    header[data-testid="stHeader"] button,
+    button[aria-label*="sidebar"],
+    button[aria-label*="Sidebar"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
-        position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
-        z-index: 9999999 !important;
         background-color: #121826 !important;
-        border: 2px solid #FF0000 !important; /* Яскраво-червона рамка */
-        border-radius: 5px !important;
-        padding: 4px !important;
+        border: 2px solid #FF0000 !important; /* Червона рамка (квадрат) */
+        border-radius: 6px !important;
+        padding: 5px !important;
+        margin: 5px !important;
         cursor: pointer !important;
     }
 
-    /* Стрілочка всередині кнопки — Червоний колір */
+    /* Червона стрілочка всередині кнопки */
     [data-testid="stSidebarToggle"] svg, 
     [data-testid="collapsedControl"] svg,
-    button[data-testid="baseButton-header"] svg,
-    [data-testid="stSidebarCollapseButton"] svg {
+    [data-testid="stSidebarCollapseButton"] svg,
+    header[data-testid="stHeader"] button svg,
+    button[aria-label*="sidebar"] svg,
+    button[aria-label*="Sidebar"] svg {
         fill: #FF0000 !important;
         color: #FF0000 !important;
         stroke: #FF0000 !important;
+        width: 24px !important;
+        height: 24px !important;
     }
 
-    section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] {
-        position: relative !important;
-        top: 0 !important;
-        left: 0 !important;
-        border: 2px solid #FF0000 !important;
-        background-color: #121826 !important;
+    /* 3. ПРИМУСОВИЙ ТЕМНИЙ РЕЖИМ ДЛЯ ДАТИ НА СМАРТФОНАХ (ЧОРНИЙ ФОН / БІЛИЙ ТЕКСТ) */
+    :root, html, body {
+        color-scheme: dark !important; /* Головний фікс для iOS/Android нативних контролів */
     }
 
-    /* 3. ФІКСАЦІЯ ПОЛІВ ВВОДУ ТА ДАТИ (ЧОРНИЙ ФОН / БІЛИЙ ТЕКСТ НА МОБІЛЬНИХ ПРИСТРОЯХ) */
-    input, select, textarea, 
-    div[data-baseweb="select"],
+    /* Віконце дати та інші текстові поля */
+    div[data-baseweb="datepicker"],
+    div[data-baseweb="datepicker"] *,
     div[data-baseweb="input"],
+    div[data-baseweb="input"] *,
     div[data-baseweb="base-input"],
-    div[data-baseweb="datepicker"] input,
+    div[data-baseweb="base-input"] *,
     input[type="date"],
-    input[type="text"] {
-        background-color: #121826 !important;
-        color: #FFFFFF !important;
-        -webkit-text-fill-color: #FFFFFF !important; /* Фікс для iOS Safari та мобільного Chrome */
-        border: 1px solid #FFE600 !important;
-        font-size: 16px !important;
-        border-radius: 3px !important;
+    input[type="text"],
+    input {
+        background-color: #000000 !important; /* Чорний фон */
+        color: #FFFFFF !important;            /* Білий текст */
+        -webkit-text-fill-color: #FFFFFF !important; /* Фікс для iOS Safari / Chrome */
+        -webkit-appearance: none !important;
+        border-color: #FFE600 !important;
+        color-scheme: dark !important;
     }
 
     /* Іконка календаря у полі дати — біла */
@@ -195,7 +203,7 @@ cbrn_style = """
     div[data-baseweb="popover"], 
     div[data-baseweb="calendar"],
     div[data-baseweb="calendar"] * {
-        background-color: #121826 !important;
+        background-color: #000000 !important;
         color: #FFFFFF !important;
     }
 
@@ -545,7 +553,7 @@ elif menu == "Журнал обліку доз за рік":
         else:
             st.info(f"За {selected_year} рік дані вимірювань відсутні.")
 
-# --- 9. РОЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК ДОЗ ---
+# --- 9. РОЗДІЛ 4: БАГАТОРІЧНИЙ ОБЛІК ДОЗ ---
 elif menu == "Багаторічний облік доз":
     st.subheader("НАКОПИЧЕНІ ДОЗИ ЗА БАГАТОРІЧНИЙ ПЕРІОД (2–50 РОКІВ)")
     
