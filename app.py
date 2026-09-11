@@ -123,40 +123,51 @@ st.set_page_config(
 
 cbrn_style = """
 <style>
-  /* 1. ЖОРСТКЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЯРЛИКІВ ЗПРАВА */
+/* 1. ПОВНЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЯРЛИКІВ СПРАВА (Share, GitHub, Edit) */
     #MainMenu, 
     footer, 
     [data-testid="stDecoration"], 
     [data-testid="stStatusWidget"],
     [data-testid="stHeaderActionElements"],
-    .stAppDeployButton {
+    .stAppDeployButton,
+    header a,
+    header button:not([data-testid*="Sidebar"]):not([data-testid*="sidebar"]):not([data-testid*="collapsedControl"]):not([data-testid*="HeaderToggle"]) {
         display: none !important;
         visibility: hidden !important;
     }
 
-    /* 2. ПЕРЕНЕСЕННЯ КНОПКИ ВНИЗ (ПЕРЕД ЗАГОЛОВКОМ) ТА ЇЇ СТИЛІЗАЦІЯ */
+    /* 2. ПЕРЕНЕСЕННЯ КНОПКИ РОЗГОРТАННЯ ПАНЕЛІ ВНИЗ І СТИЛІЗАЦІЯ */
     header[data-testid="stHeader"] {
-        background: transparent !important; /* Прозора шапка */
+        background: transparent !important;
         box-shadow: none !important;
     }
 
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapseButton"],
-    [data-testid="stSidebarToggle"] {
+    [data-testid="stSidebarToggle"],
+    [data-testid="stHeaderToggle"] {
         position: absolute !important;
-        top: 3.5rem !important; /* Відступ зверху. Збільште (напр. 4.5rem), щоб опустити ще нижче */
-        left: 2rem !important;  /* Відступ зліва */
+        top: 2.8rem !important; /* Переносить кнопку вниз безпосередньо до заголовка */
+        left: 1.5rem !important;
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         background-color: #121826 !important;
-        border: 2px solid #FF0000 !important;
+        border: 2px solid #FF0000 !important; /* Червона рамка */
         border-radius: 6px !important;
-        padding: 5px !important;
+        padding: 4px 8px !important;
         z-index: 99999 !important;
         cursor: pointer !important;
     }
 
+    [data-testid="collapsedControl"] *,
+    [data-testid="stSidebarCollapseButton"] *,
+    [data-testid="stSidebarToggle"] *,
+    [data-testid="stHeaderToggle"] * {
+        fill: #FF0000 !important;
+        color: #FF0000 !important;
+        stroke: #FF0000 !important;
+    }
     [data-testid="collapsedControl"] svg,
     [data-testid="stSidebarCollapseButton"] svg,
     [data-testid="stSidebarToggle"] svg {
