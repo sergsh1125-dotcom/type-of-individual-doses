@@ -123,55 +123,49 @@ st.set_page_config(
 
 cbrn_style = """
 <style>
-    /* 1. ПРИХОВУЄМО СТАНДАРТНЕ МЕНЮ ТА СЛУЖБОВІ ЯРЛИКИ ЗВЕРХУ СПРАВА */
+  /* 1. ЖОРСТКЕ ПРИХОВУВАННЯ СЛУЖБОВИХ ЯРЛИКІВ ЗПРАВА */
     #MainMenu, 
     footer, 
     [data-testid="stDecoration"], 
     [data-testid="stStatusWidget"],
-    .stAppDeployButton,
-    [data-testid="stHeaderActionElements"] {
+    [data-testid="stHeaderActionElements"],
+    .stAppDeployButton {
         display: none !important;
         visibility: hidden !important;
     }
 
-    /* ФІКС ШАПКИ ДЛЯ МОБІЛЬНИХ: Темний фон замість білого */
+    /* 2. ПЕРЕНЕСЕННЯ КНОПКИ ВНИЗ (ПЕРЕД ЗАГОЛОВКОМ) ТА ЇЇ СТИЛІЗАЦІЯ */
     header[data-testid="stHeader"] {
-        background-color: #0B101D !important;
-        z-index: 99999 !important;
+        background: transparent !important; /* Прозора шапка */
+        box-shadow: none !important;
     }
 
-    /* 2. КНОПКА ТА СТРІЛКА РОЗГОРТАННЯ/ЗГОРТАННЯ ПАНЕЛІ (У ЧЕРВОНОМУ КВАДРАТІ) */
-    [data-testid="stSidebarToggle"], 
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapseButton"],
-    header[data-testid="stHeader"] button,
-    button[aria-label*="sidebar"],
-    button[aria-label*="Sidebar"] {
+    [data-testid="stSidebarToggle"] {
+        position: absolute !important;
+        top: 3.5rem !important; /* Відступ зверху. Збільште (напр. 4.5rem), щоб опустити ще нижче */
+        left: 2rem !important;  /* Відступ зліва */
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         background-color: #121826 !important;
-        border: 2px solid #FF0000 !important; /* Червона рамка (квадрат) */
+        border: 2px solid #FF0000 !important;
         border-radius: 6px !important;
         padding: 5px !important;
-        margin: 5px !important;
+        z-index: 99999 !important;
         cursor: pointer !important;
     }
 
-    /* Червона стрілочка всередині кнопки */
-    [data-testid="stSidebarToggle"] svg, 
     [data-testid="collapsedControl"] svg,
     [data-testid="stSidebarCollapseButton"] svg,
-    header[data-testid="stHeader"] button svg,
-    button[aria-label*="sidebar"] svg,
-    button[aria-label*="Sidebar"] svg {
+    [data-testid="stSidebarToggle"] svg {
         fill: #FF0000 !important;
         color: #FF0000 !important;
         stroke: #FF0000 !important;
         width: 24px !important;
         height: 24px !important;
     }
-
     /* 3. ПРИМУСОВИЙ ТЕМНИЙ РЕЖИМ ДЛЯ ДАТИ НА СМАРТФОНАХ (ЧОРНИЙ ФОН / БІЛИЙ ТЕКСТ) */
     :root, html, body {
         color-scheme: dark !important; /* Головний фікс для iOS/Android нативних контролів */
