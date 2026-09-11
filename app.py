@@ -123,11 +123,12 @@ st.set_page_config(
 
 cbrn_style = """
 <style>
-    /* 1. ПРИХОВУЄМО СТАНДАРТНЕ МЕНЮ STREAMLIT */
+    /* 1. ПРИХОВУЄМО СТАНДАРТНЕ МЕНЮ ТА СЛУЖБОВІ ЯРЛИКИ ЗВЕРХУ СПРАВА */
     #MainMenu, 
     footer, 
     [data-testid="stDecoration"], 
-    [data-testid="stStatusWidget"] {
+    [data-testid="stStatusWidget"],
+    [data-testid="stToolbar"] {
         display: none !important;
         visibility: hidden !important;
     }
