@@ -31,6 +31,15 @@ def init_db():
                 FOREIGN KEY (person_id) REFERENCES personnel (id) ON DELETE CASCADE
             )
         ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS annual_archives (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                year INTEGER UNIQUE NOT NULL,
+                archived_at DATETIME NOT NULL,
+                total_people INTEGER NOT NULL,
+                collective_dose REAL NOT NULL
+            )
+        ''')
         conn.commit()
 
 init_db()
@@ -110,7 +119,6 @@ st.set_page_config(page_title="Система ІДК", layout="wide")
 
 cbrn_style = """
 <style>
-    /* Повне приховування верхньої панелі, аватара GitHub та системних елементів */
     header, 
     [data-testid="stHeader"], 
     [data-testid="stToolbar"], 
@@ -389,8 +397,23 @@ elif menu == "Внесення доз":
 elif menu == "Журнал обліку доз за рік":
     st.subheader("ЖУРНАЛ ОБЛІКУ ІНДИВІДУАЛЬНИХ ДОЗ ЗА РІК")
     
-    selected_year = st.selectbox("Оберіть рік звітності", range(datetime.now().year, 1970, -1))
+    with get_connection() as conn:
+        archived_years_df = pd.read_sql("SELECT year, archived_at FROM annual_archives", conn)
+    archived_years = set(archived_years_df['year'].tolist()) if not archived_years_df.empty else set()
+
+    col_hdr1, col_hdr2 = st.columns([1, 2])
+    with col_hdr1:
+        selected_year = st.selectbox("Оберіть рік звітності", range(datetime.now().year, 1970, -1))
     
+    is_archived = selected_year in archived_years
+    
+    with col_hdr2:
+        if is_archived:
+            arch_date = archived_years_df[archived_years_df['year'] == selected_year]['archived_at'].iloc[0]
+            st.success(f"СТАТУС: ЖУРНАЛ ЗА {selected_year} РІК ЗАРЕЄСТРОВАНО ТА ЗААРХІВОВАНО ({arch_date})")
+        else:
+            st.info("СТАТУС: АКТИВНИЙ РІК (автоматичний підрахунок при кожному додаванні дози)")
+
     df_m = get_all_measurements()
     if not df_m.empty:
         df_year = df_m[df_m['year'] == str(selected_year)]
@@ -404,30 +427,74 @@ elif menu == "Журнал обліку доз за рік":
                 person_name = group['full_name'].iloc[0]
                 position = group['position'].iloc[0]
                 
-                dates_doses = "; ".join([f"{row['measurement_date']}: {row['dose_msv']}мЗв" for _, row in group.iterrows()])
+                sorted_group = group.sort_values('measurement_date')
+                dates_doses = "\n".join([f"{r['measurement_date']}: {r['dose_msv']} мЗв" for _, r in sorted_group.iterrows()])
+                
                 total_year_dose = group['dose_msv'].sum()
                 
                 summary_records.append({
                     "№ з/п": idx,
                     "Прізвище, ім’я та по батькові": person_name,
                     "Посада": position,
-                    "Дози за датами вимірювання (в мЗв)": dates_doses,
-                    "Сумарна доза за рік (в мЗв)": round(total_year_dose, 3)
+                    "Дози, отримані протягом року": dates_doses,
+                    "Записів": len(group),
+                    "Сумарна доза за рік (мЗв)": f"{total_year_dose:.3f}",
+                    "_raw_sum": total_year_dose
                 })
                 idx += 1
             
             df_report = pd.DataFrame(summary_records)
-            st.dataframe(df_report, height=350, use_container_width=True)
             
-            csv = df_report.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="ЕКСПОРТУВАТИ ЖУРНАЛ ЗА РІК (CSV)",
-                data=csv,
-                file_name=f"Journal_IDK_{selected_year}.csv",
-                mime="text/csv"
+            coll_dose = df_report['_raw_sum'].sum()
+            st.markdown(f"**Всього осіб:** {len(df_report)} | **Колективна доза підрозділу за {selected_year} рік:** `{coll_dose:.3f} люд.-мЗв`")
+            
+            df_display = df_report.drop(columns=['_raw_sum'])
+            st.dataframe(
+                df_display, 
+                height=450, 
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Дози, отримані протягом року": st.column_config.TextColumn(
+                        "Дози за датами вимірювання",
+                        width="large"
+                    ),
+                    "Сумарна доза за рік (мЗв)": st.column_config.TextColumn(
+                        "Сумарна доза за рік",
+                        width="medium"
+                    )
+                }
             )
+            
+            st.markdown("---")
+            col_b1, col_b2 = st.columns(2)
+            
+            with col_b1:
+                csv_data = df_display.to_csv(index=False).encode('utf-8-sig')
+                st.download_button(
+                    label=f"ЗАВАНТАЖИТИ ОФІЦІЙНИЙ ЗВІТ ЗА {selected_year} РІК (CSV)",
+                    data=csv_data,
+                    file_name=f"Journal_IDK_{selected_year}_Archived.csv",
+                    mime="text/csv"
+                )
+            
+            with col_b2:
+                if not is_archived:
+                    if st.button(f"ЗАФІКСУВАТИ ТА ЗААРХІВУВАТИ ЖУРНАЛ ЗА {selected_year} РІК"):
+                        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+                        with get_connection() as conn:
+                            cursor = conn.cursor()
+                            cursor.execute(
+                                "INSERT OR REPLACE INTO annual_archives (year, archived_at, total_people, collective_dose) VALUES (?, ?, ?, ?)",
+                                (selected_year, now_str, len(df_report), coll_dose)
+                            )
+                            conn.commit()
+                        st.success(f"Журнал за {selected_year} рік зафіксовано в архіві!")
+                        st.rerun()
+                else:
+                    st.caption("Цей рік уже збережено в постійному архіві.")
         else:
-            st.info(f"За {selected_year} рік дані відсутні.")
+            st.info(f"За {selected_year} рік дані вимірювань відсутні.")
 
 # --- 9. РОЗДІЛ 4: БАГАТО РІЧНИЙ ОБЛІК ДОЗ ---
 elif menu == "Багаторічний облік доз":
@@ -446,7 +513,7 @@ elif menu == "Багаторічний облік доз":
             end_period = st.number_input("Кінцевий рік", min_value=start_period, max_value=2070, value=max_yr)
             
         period_len = end_period - start_period + 1
-        st.warning(f"ОБРАНО ІНТЕРВАЛ СПОСТЕРЕЖЕННЯ: {period_len} РОКІВ ({start_period} – {end_period})")
+        st.warning(f"ОБРАНО ІНТИРВАЛ СПОСТЕРЕЖЕННЯ: {period_len} РОКІВ ({start_period} – {end_period})")
         
         df_filtered = df_m[(df_m['year_int'] >= start_period) & (df_m['year_int'] <= end_period)]
         
