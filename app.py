@@ -114,42 +114,34 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТИЛЮ ТА АДАПТИВНОСТІ МЕНЮ ---
+# --- 3. НАЛАШТУВАННЯ СТОРІНКИ ТА CSS ---
 st.set_page_config(
     page_title="Система ІДК", 
     layout="wide",
-    initial_sidebar_state="expanded"  # Примусово розгортати панель при відкритті
+    initial_sidebar_state="expanded"
 )
 
 cbrn_style = """
 <style>
-    /* 1. ПРИХОВУВАННЯ ТІЛЬКИ МЕНЮ ТА ТУЛБАРУ (БЕЗ БЛОКУВАННЯ КНОПОК БОКОВОГО МЕНЮ) */
-    [data-testid="stToolbar"], 
-    [data-testid="stHeaderActionElements"],
-    [data-testid="stStatusWidget"],
-    [data-testid="stDecoration"],
-    a[href*="github.com"],
-    #MainMenu,
-    footer {
+    /* 1. ПРИХОВУЄМО ЛИШЕ СИС ТЕМНЕ МЕНЮ STREAMLIT ТА ФУТЕР (КНОПКУ МЕНЮ ЗАЛИШАЄМО!) */
+    #MainMenu, 
+    footer, 
+    [data-testid="stDecoration"], 
+    [data-testid="stStatusWidget"] {
         display: none !important;
         visibility: hidden !important;
     }
 
-    /* Прозора шапка з високим z-index */
-    [data-testid="stHeader"] {
-        background-color: transparent !important;
-        z-index: 999999 !important;
-    }
-
-    /* 2. ЯВНА КНОПКА РОЗГОРТАННЯ ПАНЕЛІ КОЛИ ВОНА ЗГОРНУТА (НА ПК ТА СМАРТФОНАХ) */
+    /* 2. ГАРАНТОВАНА ВИДИМІСТЬ КНОПКИ ВІДКРИТТЯ БОКОВОЇ ПАНЕЛІ (У СВІЖИХ ТА СТАРИХ ВЕРСІЯХ STREAMLIT) */
+    [data-testid="stSidebarToggle"], 
     [data-testid="collapsedControl"],
-    div[data-testid="collapsedControl"] {
+    button[data-testid="baseButton-header"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
+        top: 12px !important;
+        left: 12px !important;
         z-index: 9999999 !important;
         background-color: #121826 !important;
         border: 2px solid #FFE600 !important;
@@ -158,49 +150,35 @@ cbrn_style = """
         cursor: pointer !important;
     }
 
-    [data-testid="collapsedControl"] button,
-    [data-testid="collapsedControl"] span,
-    [data-testid="collapsedControl"] svg {
-        color: #FFE600 !important;
+    [data-testid="stSidebarToggle"] svg, 
+    [data-testid="collapsedControl"] svg,
+    button[data-testid="baseButton-header"] svg {
         fill: #FFE600 !important;
-        stroke: #FFE600 !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-
-    /* 3. КНОПКА ЗГОРТАННЯ ВСЕРЕДИНІ БОКОВОЇ ПАНЕЛІ */
-    [data-testid="stSidebarCollapseButton"],
-    section[data-testid="stSidebar"] button {
         color: #FFE600 !important;
-        fill: #FFE600 !important;
-    }
-    
-    [data-testid="stSidebarCollapseButton"] svg,
-    section[data-testid="stSidebar"] button svg {
-        color: #FFE600 !important;
-        fill: #FFE600 !important;
         stroke: #FFE600 !important;
     }
 
-    /* 4. БОКОВА ПАНЕЛЬ */
+    /* 3. БОКОВА ПАНЕЛЬ */
     section[data-testid="stSidebar"] {
-        border-right: 5px double #FFE600 !important;
         background-color: #0E1422 !important;
+        border-right: 3px solid #FFE600 !important;
+        min-width: 280px !important;
     }
 
     .block-container {
-        padding-top: 2rem !important;
+        padding-top: 2.5rem !important;
         padding-bottom: 1.5rem !important;
     }
+    
     section[data-testid="stSidebar"] > div {
-        padding-top: 1rem !important;
+        padding-top: 1.5rem !important;
     }
 
-    /* Загальна темна тема */
+    /* 4. ЗАГАЛЬНА ТЕМНА ТЕМА НДІ/ХБРЯ */
     .stApp {
         background-color: #0B101D;
         color: #FFE600 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: system-ui, -apple-system, sans-serif !important;
     }
 
     h1, h2, h3, label, .stMarkdown, p, span {
@@ -208,7 +186,7 @@ cbrn_style = """
         font-weight: bold !important;
     }
 
-    /* Стилізація полів вводу */
+    /* 5. ПОЛЯ ВВОДУ */
     input, select, textarea, div[data-baseweb="select"] {
         border: 1px solid #FFE600 !important;
         color: #FFFFFF !important;
@@ -216,30 +194,21 @@ cbrn_style = """
         font-size: 16px !important;
         border-radius: 3px !important;
     }
-    input::placeholder {
-        color: #888888 !important;
-    }
 
     div[data-baseweb="select"] span, div[data-baseweb="select"] input {
         color: #FFFFFF !important;
     }
 
-    /* Блоки та контейнери */
+    /* 6. БЛОКИ ТА ТАБЛИЦІ */
     div[data-testid="stForm"], 
     div[data-testid="stMetric"],
-    div[data-testid="stExpander"] {
-        border: 2px solid #FFE600 !important;
-        border-radius: 4px !important;
-        padding: 12px !important;
-        background-color: #0E1422 !important;
-    }
-
-    /* Таблиці */
+    div[data-testid="stExpander"],
     div.stDataFrame {
         border: 2px solid #FFE600 !important;
         border-radius: 4px !important;
         background-color: #0E1422 !important;
     }
+
     div.stDataFrame [data-testid="stTable"] td, 
     div.stDataFrame [role="gridcell"] {
         color: #FFFFFF !important;
@@ -250,11 +219,9 @@ cbrn_style = """
         font-weight: bold !important;
     }
 
-    /* Стилізація кнопок */
+    /* 7. КНОПКИ */
     .stButton > button, 
-    div[data-testid="stFormSubmitButton"] > button,
-    button[kind="secondaryFormSubmit"],
-    button[kind="primaryFormSubmit"] {
+    div[data-testid="stFormSubmitButton"] > button {
         border: 2px solid #FFE600 !important;
         color: #000000 !important;
         background-color: #FFE600 !important;
@@ -268,29 +235,29 @@ cbrn_style = """
     div[data-testid="stFormSubmitButton"] > button:hover {
         background-color: #000000 !important;
         color: #FFE600 !important;
-        border: 2px solid #FFE600 !important;
     }
 
     div[role="radiogroup"] label {
         border: 1px solid #FFE600 !important;
-        padding: 6px 10px !important;
-        margin-bottom: 4px !important;
+        padding: 8px 12px !important;
+        margin-bottom: 6px !important;
         border-radius: 3px !important;
+        background-color: #121826 !important;
         color: #FFE600 !important;
     }
 </style>
 """
 st.markdown(cbrn_style, unsafe_allow_html=True)
 
-# --- 4. ГОЛОВНИЙ ЗАГОЛОВОК СИСТЕМИ ---
+# --- 4. ГОЛОВНИЙ ЗАГОЛОВОК ---
 st.title("Система обліку індивідуальних доз опромінення (ІДК)")
 st.markdown("---")
 
-# --- 5. БОКОВА ПАНЕЛЬ ТА АВТОРИЗАЦІЯ ---
+# --- 5. БОКОВА ПАНЕЛЬ ТА НАВІГАЦІЯ ---
 st.sidebar.subheader("ПАНЕЛЬ УПРАВЛІННЯ")
 
 menu = st.sidebar.radio(
-    label="",
+    label="Навігація",
     options=[
         "Особовий склад",
         "Внесення доз",
@@ -310,7 +277,7 @@ def logout_admin():
 if "admin_pass" not in st.session_state:
     st.session_state["admin_pass"] = ""
 
-st.sidebar.markdown("Для редагування або видалення даних введіть пароль адміністратора у панелі нижче:")
+st.sidebar.markdown("Для редагування або видалення даних введіть пароль:")
 admin_password_input = st.sidebar.text_input("Пароль адміністратора", type="password", key="admin_pass")
 
 IS_ADMIN = (st.session_state["admin_pass"] == "admin123")
@@ -393,7 +360,7 @@ elif menu == "Внесення доз":
     
     df_persons = get_personnel()
     if df_persons.empty:
-        st.warning("База даних особового складу порожня!")
+        st.warning("База даних особового складу порожня! Спочатку додайте осіб у розділі 'Особовий склад'.")
     else:
         col_in1, col_in2 = st.columns([1, 1])
         
@@ -472,7 +439,7 @@ elif menu == "Журнал обліку доз за рік":
             arch_date = archived_years_df[archived_years_df['year'] == selected_year]['archived_at'].iloc[0]
             st.success(f"СТАТУС: ЖУРНАЛ ЗА {selected_year} РІК ЗАРЕЄСТРОВАНО ТА ЗААРХІВОВАНО ({arch_date})")
         else:
-            st.info("СТАТУС: АКТИВНИЙ РІК (автоматичний підрахунок при кожному додаванні дози)")
+            st.info("СТАТУС: АКТИВНИЙ РІК (автоматичний підрахунок)")
 
     df_m = get_all_measurements()
     if not df_m.empty:
@@ -513,17 +480,7 @@ elif menu == "Журнал обліку доз за рік":
                 df_display, 
                 height=450, 
                 use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Дози, отримані протягом року": st.column_config.TextColumn(
-                        "Дози за датами вимірювання",
-                        width="large"
-                    ),
-                    "Сумарна доза за рік (мЗв)": st.column_config.TextColumn(
-                        "Сумарна доза за рік",
-                        width="medium"
-                    )
-                }
+                hide_index=True
             )
             
             st.markdown("---")
