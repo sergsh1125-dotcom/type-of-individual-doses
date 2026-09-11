@@ -114,33 +114,45 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТИЛЮ ТА ПРИХОВУВАННЯ ГІТХАБ/ШАПКИ ---
+# --- 3. НАЛАШТУВАННЯ СТИЛЮ ТА АДАПТИВНОСТІ МЕНЮ ---
 st.set_page_config(page_title="Система ІДК", layout="wide")
 
 cbrn_style = """
 <style>
-    header, 
-    [data-testid="stHeader"], 
+    /* 1. ПРИХОВУВАННЯ ТІЛЬКИ МЕНЮ ТА АВАТАРА GITHUB (БЕЗ БЛОКУВАННЯ КНОПКИ БОКОВОГО МЕНЮ НА МОБІЛЬНИХ) */
     [data-testid="stToolbar"], 
     [data-testid="stHeaderActionElements"],
     [data-testid="stStatusWidget"],
-    a[href*="github.com"] {
+    [data-testid="stDecoration"],
+    a[href*="github.com"],
+    #MainMenu,
+    footer {
         display: none !important;
         visibility: hidden !important;
-        height: 0px !important;
     }
 
-    #MainMenu {visibility: hidden !important;}
-    footer {visibility: hidden !important;}
+    /* Прозора шапка з підтримкою кнопки відкриття меню для смартфонів */
+    [data-testid="stHeader"] {
+        background-color: transparent !important;
+        z-index: 99999 !important;
+    }
+
+    /* Підсвічування кнопки розгортання бокової панелі на смартфонах */
+    [data-testid="stSidebarCollapseButton"] button, 
+    [data-testid="stHeader"] button {
+        color: #FFE600 !important;
+        fill: #FFE600 !important;
+    }
 
     .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 1.5rem !important;
     }
     section[data-testid="stSidebar"] > div {
-        padding-top: 0.5rem !important;
+        padding-top: 1rem !important;
     }
 
+    /* Загальна темна тема */
     .stApp {
         background-color: #0B101D;
         color: #FFE600 !important;
@@ -152,6 +164,7 @@ cbrn_style = """
         font-weight: bold !important;
     }
 
+    /* Стилізація полів вводу */
     input, select, textarea, div[data-baseweb="select"] {
         border: 1px solid #FFE600 !important;
         color: #FFFFFF !important;
@@ -167,6 +180,7 @@ cbrn_style = """
         color: #FFFFFF !important;
     }
 
+    /* Блоки та контейнери */
     div[data-testid="stForm"], 
     div[data-testid="stMetric"],
     div[data-testid="stExpander"] {
@@ -176,6 +190,7 @@ cbrn_style = """
         background-color: #0E1422 !important;
     }
 
+    /* Таблиці */
     div.stDataFrame {
         border: 2px solid #FFE600 !important;
         border-radius: 4px !important;
@@ -196,16 +211,22 @@ cbrn_style = """
         background-color: #0E1422 !important;
     }
 
-    .stButton>button {
+    /* 2. ТОЧНА СТИЛІЗАЦІЯ УСІХ КНОПОК (ВКЛЮЧАЮЧИ КНОПКИ У ФОРМАХ st.form_submit_button) */
+    .stButton > button, 
+    div[data-testid="stFormSubmitButton"] > button,
+    button[kind="secondaryFormSubmit"],
+    button[kind="primaryFormSubmit"] {
         border: 2px solid #FFE600 !important;
         color: #000000 !important;
         background-color: #FFE600 !important;
         font-weight: bold !important;
         font-size: 16px !important;
         border-radius: 3px !important;
-        width: 100%;
+        width: 100% !important;
     }
-    .stButton>button:hover {
+
+    .stButton > button:hover, 
+    div[data-testid="stFormSubmitButton"] > button:hover {
         background-color: #000000 !important;
         color: #FFE600 !important;
         border: 2px solid #FFE600 !important;
@@ -513,7 +534,7 @@ elif menu == "Багаторічний облік доз":
             end_period = st.number_input("Кінцевий рік", min_value=start_period, max_value=2070, value=max_yr)
             
         period_len = end_period - start_period + 1
-        st.warning(f"ОБРАНО ІНТИРВАЛ СПОСТЕРЕЖЕННЯ: {period_len} РОКІВ ({start_period} – {end_period})")
+        st.warning(f"ОБРАНО ІНТЕРВАЛ СПОСТЕРЕЖЕННЯ: {period_len} РОКІВ ({start_period} – {end_period})")
         
         df_filtered = df_m[(df_m['year_int'] >= start_period) & (df_m['year_int'] <= end_period)]
         
