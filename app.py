@@ -114,7 +114,7 @@ def get_all_measurements():
         '''
         return pd.read_sql(query, conn)
 
-# --- 3. НАЛАШТУВАННЯ СТОРІНКИ ТА ОНОВЛЕНИЙ СТИЛЬ (ТЕМНИЙ ФОН, ЖОВТИЙ ТЕКСТ, БІЛІ ВІКОНЦЯ ВВОДУ) ---
+# --- 3. НАЛАШТУВАННЯ СТОРІНКИ ТА CSS ---
 st.set_page_config(
     page_title="Система ІДК", 
     layout="wide",
@@ -123,46 +123,44 @@ st.set_page_config(
 
 cbrn_style = """
 <style>
-    /* 1. ПРИХОВУВАННЯ СЛУЖБОВИХ ЕЛЕМЕНТІВ СТРАНИЦІ (МЕНЮ, ТРИ КРАПКИ, FOOTER) */
-    #MainMenu,
-    footer,
-    [data-testid="stHeader"] [data-testid="stToolbar"],
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"],
-    [data-testid="stStatusWidget"],
-    .stDeployButton {
+    /* 1. ПРИХОВУЄМО СТАНДАРТНЕ МЕНЮ STREAMLIT */
+    #MainMenu, 
+    footer, 
+    [data-testid="stDecoration"], 
+    [data-testid="stStatusWidget"] {
         display: none !important;
         visibility: hidden !important;
-        opacity: 0 !important;
     }
 
+    /* ФІКС ШАПКИ ДЛЯ МОБІЛЬНИХ: Темний фон замість білого */
     header[data-testid="stHeader"] {
-        background-color: transparent !important;
-        pointer-events: none !important;
-    }
-    header[data-testid="stHeader"] * {
-        pointer-events: auto !important;
+        background-color: #0B101D !important;
+        z-index: 99999 !important;
     }
 
-    /* 2. КНОПКА РОЗГОРТАННЯ ПАНЕЛІ (ЧЕРВОНИЙ КВАДРАТ + ЧЕРВОНА СТРІЛКА) */
+    /* 2. КНОПКА ТА СТРІЛКА РОЗГОРТАННЯ/ЗГОРТАННЯ ПАНЕЛІ (У ЧЕРВОНОМУ КВАДРАТІ) */
     [data-testid="stSidebarToggle"], 
     [data-testid="collapsedControl"],
     [data-testid="stSidebarCollapseButton"],
+    header[data-testid="stHeader"] button,
     button[aria-label*="sidebar"],
     button[aria-label*="Sidebar"] {
         display: flex !important;
         visibility: visible !important;
-        background-color: #0E1422 !important;
-        border: 2px solid #FF0000 !important;
+        opacity: 1 !important;
+        background-color: #121826 !important;
+        border: 2px solid #FF0000 !important; /* Червона рамка (квадрат) */
         border-radius: 6px !important;
-        padding: 4px !important;
-        margin: 6px !important;
+        padding: 5px !important;
+        margin: 5px !important;
         cursor: pointer !important;
     }
 
+    /* Червона стрілочка всередині кнопки */
     [data-testid="stSidebarToggle"] svg, 
     [data-testid="collapsedControl"] svg,
     [data-testid="stSidebarCollapseButton"] svg,
+    header[data-testid="stHeader"] button svg,
     button[aria-label*="sidebar"] svg,
     button[aria-label*="Sidebar"] svg {
         fill: #FF0000 !important;
@@ -172,130 +170,118 @@ cbrn_style = """
         height: 24px !important;
     }
 
-    /* 3. ОСНОВНИЙ ТЕМНИЙ ФОН ТА ЖОВТИЙ ШРИФТ ДЛЯ ВСІЄЇ ПРОГРАМИ */
-    .stApp, 
-    [data-testid="stAppViewContainer"],
-    section[data-testid="stMain"],
+    /* 3. ПРИМУСОВИЙ ТЕМНИЙ РЕЖИМ ДЛЯ ДАТИ НА СМАРТФОНАХ (ЧОРНИЙ ФОН / БІЛИЙ ТЕКСТ) */
+    :root, html, body {
+        color-scheme: dark !important; /* Головний фікс для iOS/Android нативних контролів */
+    }
+
+    /* Віконце дати та інші текстові поля */
+    div[data-baseweb="datepicker"],
+    div[data-baseweb="datepicker"] *,
+    div[data-baseweb="input"],
+    div[data-baseweb="input"] *,
+    div[data-baseweb="base-input"],
+    div[data-baseweb="base-input"] *,
+    input[type="date"],
+    input[type="text"],
+    input {
+        background-color: #000000 !important; /* Чорний фон */
+        color: #FFFFFF !important;            /* Білий текст */
+        -webkit-text-fill-color: #FFFFFF !important; /* Фікс для iOS Safari / Chrome */
+        -webkit-appearance: none !important;
+        border-color: #FFE600 !important;
+        color-scheme: dark !important;
+    }
+
+    /* Іконка календаря у полі дати — біла */
+    input::-webkit-calendar-picker-indicator {
+        filter: invert(1) !important;
+        cursor: pointer !important;
+    }
+
+    /* Стилізація випадаючого вікна календаря */
+    div[data-baseweb="popover"], 
+    div[data-baseweb="calendar"],
+    div[data-baseweb="calendar"] * {
+        background-color: #000000 !important;
+        color: #FFFFFF !important;
+    }
+
+    div[data-baseweb="calendar"] button {
+        color: #FFE600 !important;
+    }
+
+    /* 4. БОКОВА ПАНЕЛЬ */
     section[data-testid="stSidebar"] {
         background-color: #0E1422 !important;
+        border-right: 3px solid #FFE600 !important;
+        min-width: 280px !important;
+    }
+
+    .block-container {
+        padding-top: 2.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+    
+    section[data-testid="stSidebar"] > div {
+        padding-top: 1.5rem !important;
+    }
+
+    /* 5. ЗАГАЛЬНА ТЕМНА ТЕМА НДІ/ХБРЯ */
+    .stApp {
+        background-color: #0B101D;
         color: #FFE600 !important;
         font-family: system-ui, -apple-system, sans-serif !important;
     }
 
-    /* Усі заголовки, текстові блоки та підписи в усьому додатку — ЖОВТІ */
-    .stApp h1, .stApp h2, .stApp h3, .stApp h4, 
-    .stApp p, .stApp span, .stApp label, .stApp div, 
-    .stApp .stMarkdown, [data-testid="stWidgetLabel"] label {
+    h1, h2, h3, label, .stMarkdown, p, span {
         color: #FFE600 !important;
-    }
-
-    /* 4. ТІЛЬКИ У ВІКОНЦЯХ, ДЕ ЙДЕ ЗАПОВНЕННЯ — БІЛИЙ ФОН ТА ЧОРНИЙ ШРИФТ */
-    :root, html, body {
-        color-scheme: light !important;
-    }
-
-    div[data-baseweb="input"],
-    div[data-baseweb="input"] input,
-    div[data-baseweb="base-input"],
-    div[data-baseweb="base-input"] input,
-    div[data-baseweb="select"] > div,
-    div[data-baseweb="datepicker"] input,
-    .stTextInput input,
-    .stNumberInput input,
-    .stDateInput input,
-    .stSelectbox div[role="combobox"] {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-        -webkit-text-fill-color: #000000 !important;
-        border: 2px solid #FFE600 !important;
-        border-radius: 4px !important;
         font-weight: bold !important;
     }
 
-    /* Кнопки плюс/мінус у віконці введення чисел */
-    div[data-baseweb="input"] button,
-    div[data-baseweb="base-input"] button,
-    .stNumberInput button {
-        background-color: #E0E0E0 !important;
-        color: #000000 !important;
-        border: none !important;
-    }
-
-    div[data-baseweb="input"] button *,
-    .stNumberInput button * {
-        color: #000000 !important;
-        fill: #000000 !important;
-    }
-
-    /* Випадаючі списки та календарі вибору дати */
-    div[data-baseweb="popover"], 
-    div[data-baseweb="calendar"],
-    div[data-baseweb="menu"],
-    ul[role="listbox"],
-    ul[role="listbox"] li {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
-    }
-
-    div[data-baseweb="calendar"] *,
-    ul[role="listbox"] * {
-        color: #000000 !important;
-    }
-
-    /* 5. ФОРМИ ТА КАРТКИ */
+    /* 6. БЛОКИ ТА ТАБЛИЦІ */
     div[data-testid="stForm"], 
     div[data-testid="stMetric"],
-    div[data-testid="stExpander"] {
-        border: 1px solid #FFE600 !important;
-        border-radius: 6px !important;
-        background-color: #121826 !important;
-        padding: 15px !important;
-    }
-
-    /* 6. ТАБЛИЦІ (DATAFRAME) */
+    div[data-testid="stExpander"],
     div.stDataFrame {
-        border: 1px solid #FFE600 !important;
-        background-color: #121826 !important;
+        border: 2px solid #FFE600 !important;
+        border-radius: 4px !important;
+        background-color: #0E1422 !important;
     }
 
-    div.stDataFrame [role="gridcell"],
-    div.stDataFrame td {
-        color: #FFE600 !important;
-        background-color: #121826 !important;
+    div.stDataFrame [data-testid="stTable"] td, 
+    div.stDataFrame [role="gridcell"] {
+        color: #FFFFFF !important;
+        font-weight: normal !important;
     }
-
-    div.stDataFrame [role="columnheader"],
-    div.stDataFrame th {
+    div.stDataFrame [role="columnheader"] {
         color: #FFE600 !important;
-        background-color: #1A2238 !important;
         font-weight: bold !important;
-        border-bottom: 1px solid #FFE600 !important;
     }
 
-    /* 7. КНОПКИ В ОСНОВНІЙ ЗОНІ */
+    /* 7. КНОПКИ ФОРМИ */
     .stButton > button, 
     div[data-testid="stFormSubmitButton"] > button {
         border: 2px solid #FFE600 !important;
-        color: #FFE600 !important;
-        background-color: #121826 !important;
+        color: #000000 !important;
+        background-color: #FFE600 !important;
         font-weight: bold !important;
-        font-size: 15px !important;
-        border-radius: 4px !important;
+        font-size: 16px !important;
+        border-radius: 3px !important;
         width: 100% !important;
     }
 
     .stButton > button:hover, 
     div[data-testid="stFormSubmitButton"] > button:hover {
-        background-color: #FFE600 !important;
-        color: #000000 !important;
+        background-color: #000000 !important;
+        color: #FFE600 !important;
     }
 
-    /* Радіо-кнопки у панелі управління */
-    section[data-testid="stSidebar"] div[role="radiogroup"] label {
+    div[role="radiogroup"] label {
         border: 1px solid #FFE600 !important;
         padding: 8px 12px !important;
         margin-bottom: 6px !important;
-        border-radius: 4px !important;
+        border-radius: 3px !important;
         background-color: #121826 !important;
         color: #FFE600 !important;
     }
