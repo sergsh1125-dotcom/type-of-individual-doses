@@ -123,7 +123,7 @@ st.set_page_config(
 
 cbrn_style = """
 <style>
-    /* 1. ПРИХОВУЄМО ЛИШЕ СИС ТЕМНЕ МЕНЮ STREAMLIT ТА ФУТЕР (КНОПКУ МЕНЮ ЗАЛИШАЄМО!) */
+    /* 1. ПРИХОВУЄМО МЕНЮ STREAMLIT ТА ФУТЕР */
     #MainMenu, 
     footer, 
     [data-testid="stDecoration"], 
@@ -132,33 +132,78 @@ cbrn_style = """
         visibility: hidden !important;
     }
 
-    /* 2. ГАРАНТОВАНА ВИДИМІСТЬ КНОПКИ ВІДКРИТТЯ БОКОВОЇ ПАНЕЛІ (У СВІЖИХ ТА СТАРИХ ВЕРСІЯХ STREAMLIT) */
+    /* 2. ЧЕРВОНА КНОПКА ТА СТРІЛКА РОЗГОРТАННЯ/ЗГОРТАННЯ ПАНЕЛІ (ДЛЯ ПК ТА СМАРТФОНІВ) */
     [data-testid="stSidebarToggle"], 
     [data-testid="collapsedControl"],
-    button[data-testid="baseButton-header"] {
+    button[data-testid="baseButton-header"],
+    [data-testid="stSidebarCollapseButton"] {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
         position: fixed !important;
-        top: 12px !important;
-        left: 12px !important;
+        top: 10px !important;
+        left: 10px !important;
         z-index: 9999999 !important;
         background-color: #121826 !important;
-        border: 2px solid #FFE600 !important;
-        border-radius: 4px !important;
+        border: 2px solid #FF0000 !important; /* Яскраво-червона рамка */
+        border-radius: 5px !important;
         padding: 4px !important;
         cursor: pointer !important;
     }
 
+    /* Стрілочка всередині кнопки — Червоний колір */
     [data-testid="stSidebarToggle"] svg, 
     [data-testid="collapsedControl"] svg,
-    button[data-testid="baseButton-header"] svg {
-        fill: #FFE600 !important;
-        color: #FFE600 !important;
-        stroke: #FFE600 !important;
+    button[data-testid="baseButton-header"] svg,
+    [data-testid="stSidebarCollapseButton"] svg {
+        fill: #FF0000 !important;
+        color: #FF0000 !important;
+        stroke: #FF0000 !important;
     }
 
-    /* 3. БОКОВА ПАНЕЛЬ */
+    section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] {
+        position: relative !important;
+        top: 0 !important;
+        left: 0 !important;
+        border: 2px solid #FF0000 !important;
+        background-color: #121826 !important;
+    }
+
+    /* 3. ФІКСАЦІЯ ПОЛІВ ВВОДУ ТА ДАТИ (ЧОРНИЙ ФОН / БІЛИЙ ТЕКСТ НА МОБІЛЬНИХ ПРИСТРОЯХ) */
+    input, select, textarea, 
+    div[data-baseweb="select"],
+    div[data-baseweb="input"],
+    div[data-baseweb="base-input"],
+    div[data-baseweb="datepicker"] input,
+    input[type="date"],
+    input[type="text"] {
+        background-color: #121826 !important;
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important; /* Фікс для iOS Safari та мобільного Chrome */
+        border: 1px solid #FFE600 !important;
+        font-size: 16px !important;
+        border-radius: 3px !important;
+    }
+
+    /* Іконка календаря у полі дати — біла */
+    input::-webkit-calendar-picker-indicator {
+        filter: invert(1) !important;
+        cursor: pointer !important;
+    }
+
+    /* Стилізація випадаючого вікна календаря */
+    div[data-baseweb="popover"], 
+    div[data-baseweb="calendar"],
+    div[data-baseweb="calendar"] * {
+        background-color: #121826 !important;
+        color: #FFFFFF !important;
+    }
+
+    div[data-baseweb="calendar"] button {
+        color: #FFE600 !important;
+    }
+
+    /* 4. БОКОВА ПАНЕЛЬ */
     section[data-testid="stSidebar"] {
         background-color: #0E1422 !important;
         border-right: 3px solid #FFE600 !important;
@@ -174,7 +219,7 @@ cbrn_style = """
         padding-top: 1.5rem !important;
     }
 
-    /* 4. ЗАГАЛЬНА ТЕМНА ТЕМА НДІ/ХБРЯ */
+    /* 5. ЗАГАЛЬНА ТЕМНА ТЕМА НДІ/ХБРЯ */
     .stApp {
         background-color: #0B101D;
         color: #FFE600 !important;
@@ -184,19 +229,6 @@ cbrn_style = """
     h1, h2, h3, label, .stMarkdown, p, span {
         color: #FFE600 !important;
         font-weight: bold !important;
-    }
-
-    /* 5. ПОЛЯ ВВОДУ */
-    input, select, textarea, div[data-baseweb="select"] {
-        border: 1px solid #FFE600 !important;
-        color: #FFFFFF !important;
-        background-color: #121826 !important;
-        font-size: 16px !important;
-        border-radius: 3px !important;
-    }
-
-    div[data-baseweb="select"] span, div[data-baseweb="select"] input {
-        color: #FFFFFF !important;
     }
 
     /* 6. БЛОКИ ТА ТАБЛИЦІ */
@@ -219,7 +251,7 @@ cbrn_style = """
         font-weight: bold !important;
     }
 
-    /* 7. КНОПКИ */
+    /* 7. КНОПКИ ФОРМИ */
     .stButton > button, 
     div[data-testid="stFormSubmitButton"] > button {
         border: 2px solid #FFE600 !important;
