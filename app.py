@@ -128,7 +128,8 @@ cbrn_style = """
     footer, 
     [data-testid="stDecoration"], 
     [data-testid="stStatusWidget"],
-    [data-testid="stToolbar"] {
+    .stAppDeployButton,
+    [data-testid="stHeaderActionElements"] {
         display: none !important;
         visibility: hidden !important;
     }
